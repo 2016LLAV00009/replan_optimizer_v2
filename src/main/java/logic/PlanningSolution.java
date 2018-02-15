@@ -30,7 +30,7 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
 	
     private CopyOnWriteArrayList<PlannedFeature> plannedFeatures; 	            // Included features
 	private CopyOnWriteArrayList<Feature> undoneFeatures; 						// Not included features
-    private Map<Employee, NewSchedule> employeesPlanning; 			// The employees' Schedule
+    private Map<Employee, NewSchedule> employeesPlanning; 			// The employees' DaySlot
 	private double endDate;     								// The end hour of the solution
     private Analytics analytics = null;
     
@@ -370,7 +370,7 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
 		sb.append("\n");
 		if (employeesPlanning != null) {
 			for (Employee e : employeesPlanning.keySet()) {
-				sb.append("Employee " + e.getName() + " Schedule (availability: " + e.getWeekAvailability() + "h)\n");
+				sb.append("Employee " + e.getName() + " DaySlot (availability: " + e.getWeekAvailability() + "h)\n");
 				for (PlannedFeature pf : employeesPlanning.get(e).getPlannedFeatures()) {
 					sb.append("\tFeature " + pf.getFeature() + " from " + pf.getBeginHour() + " to " + pf.getEndHour() + " (" + pf.getFeature().getDuration() + "h)\n");
 				}

@@ -28,7 +28,7 @@
       <operations public="true" package="true" protected="true" private="false" static="true"/>    
     </display>  
   </class>  
-  <class id="4" language="java" name="entities.Schedule" project="optimizer" 
+  <class id="4" language="java" name="entities.DaySlot" project="optimizer"
     file="/optimizer/src/main/java/entities/Schedule.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="198" y="98"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 

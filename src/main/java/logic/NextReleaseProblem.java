@@ -6,8 +6,6 @@ package logic;
 import entities.*;
 import entities.parameters.AlgorithmParameters;
 import entities.parameters.EvaluationParameters;
-import io.swagger.model.ApiNextReleaseProblem;
-import io.swagger.model.ApiPlanningSolution;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,10 +14,7 @@ import org.uma.jmetal.problem.impl.AbstractGenericProblem;
 import org.uma.jmetal.util.solutionattribute.impl.NumberOfViolatedConstraints;
 import org.uma.jmetal.util.solutionattribute.impl.OverallConstraintViolation;
 
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,16 +33,12 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 
 	private static final long serialVersionUID = 3302475694747789178L; // Generated Id
 
-    private static final int INDEX_PRIORITY_OBJECTIVE = 0; // The index of the priority score objective in the objectives list
-	private static final int INDEX_END_DATE_OBJECTIVE = 1; // The index of the end date objective in the objectives list
-	private static final int INDEX_DISTRIBUTION_OBJECTIVE = 2;	// Make sure to
-	
 	private static final Logger logger = LoggerFactory.getLogger(NextReleaseProblem.class);
 
 	// PROBLEM
 	private List<Feature> features;
 	private List<Employee> employees;
-	private PlanningSolution prevSolution;
+	private List<DaySlot> scheduleSlots;
 	private double replanHour; 		// The hour of the requested replan
 	private int nbWeeks; 			// The number of weeks of the iteration
 	private double nbHoursByWeek; 	// The number of worked hours by week
@@ -58,6 +49,7 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 	private NumberOfViolatedConstraints<PlanningSolution> numberOfViolatedConstraints;
 	private OverallConstraintViolation<PlanningSolution> overallConstraintViolation;
 	private SolutionQuality solutionQuality;
+	private Map<Employee, NewSchedule> planning;
 	private double precedenceConstraintOverall; //The overall of a violated constraint
 	private double worstScore; //The priority score if there is no planned feature
 	private double worstEndDate; //The worst end date, if there is no planned feature
@@ -69,12 +61,8 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 	public void setReplanHour(double replanHour) {
 		this.replanHour = replanHour;
 	}
-	public PlanningSolution getPreviousSolution() {
-		return prevSolution;
-	}
-	public void setPreviousSolution(PlanningSolution previousSolution) {
-		this.prevSolution = previousSolution;
-	}
+	public void setScheduleSlots(List<DaySlot> scheduleSlots) { this.scheduleSlots = scheduleSlots; }
+	public List<DaySlot> getScheduleSlots() { return scheduleSlots; }
 	public List<Feature> getFeatures() {
 		return features;
 	}
@@ -124,12 +112,36 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 	}
 
 	// Constructor (normal)
-	public NextReleaseProblem(List<Feature> features, List<Employee> employees, int nbWeeks, double nbHoursPerWeek) {
+	public NextReleaseProblem(List<Feature> features, List<Employee> employees,
+							  int nbWeeks, double nbHoursPerWeek) {
 		this();
-		
 		this.employees = employees;
 		this.nbWeeks = nbWeeks;
 		this.nbHoursByWeek = nbHoursPerWeek;
+
+		// TODO: If a feature is not included because 1. lack of skills or 2. the dependee is not included; this information should be noted somewhere and send back to the controller once the plan is produced).
+		// checks that features can be satisfied by the skills of the resources and the dependencies are included
+		for (Feature feature : features)
+			if (getSkilledEmployees(feature.getRequiredSkills()).size() > 0) // 1.
+				if (features.containsAll(feature.getPreviousFeatures())) // 2.
+					this.features.add(feature);
+
+		worstEndDate = nbWeeks * nbHoursByWeek;
+		replanHour = 0.0;
+
+		initializeSchedule();
+		initializeWorstScore();
+		initializeNumberOfConstraint();
+	}
+
+	// Constructor (normal)
+	public NextReleaseProblem(List<Feature> features, List<Employee> employees, List<DaySlot> scheduleSlots,
+							  int nbWeeks, double nbHoursPerWeek) {
+		this();
+		this.employees = employees;
+		this.nbWeeks = nbWeeks;
+		this.nbHoursByWeek = nbHoursPerWeek;
+		this.scheduleSlots = scheduleSlots;
 
 		// TODO: If a feature is not included because 1. lack of skills or 2. the dependee is not included; this information should be noted somewhere and send back to the controller once the plan is produced).
 		// checks that features can be satisfied by the skills of the resources and the dependencies are included
@@ -141,30 +153,38 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 		worstEndDate = nbWeeks * nbHoursByWeek;
 		replanHour = 0.0;
 
+		initializeSchedule();
 		initializeWorstScore();
 		initializeNumberOfConstraint();
 	}
-	
+
+	private void initializeSchedule() {
+		planning = new HashMap<>();
+		for (Employee e : employees) {
+			List<DaySlot> slots = new ArrayList<>();
+			for (DaySlot slot : scheduleSlots) {
+				if (slot.getResourceId().equals(e.getName())) slots.add(slot);
+			}
+			NewSchedule schedule = new NewSchedule(e, nbWeeks, nbHoursByWeek, slots);
+			planning.put(e, schedule);
+		}
+	}
+
 	public void setTag(String name) {
 		setName(name);
 	}
 	
 	// Constructor (for replanning)
-	public NextReleaseProblem(PlanningSolution previousSolution, List<Feature> features, List<Employee> employees,
+	public NextReleaseProblem(List<Feature> features, List<Employee> employees, List<DaySlot> scheduleSlots,
 								int nbWeeks, double nbHoursPerWeek, double replanHour) {
-		this(features, employees, nbWeeks, nbHoursPerWeek);
-		this.prevSolution = previousSolution;
+		this(features, employees, scheduleSlots, nbWeeks, nbHoursPerWeek);
 		this.replanHour = replanHour;
 		
 	}
 
 	// Copy constructor
 	public NextReleaseProblem(NextReleaseProblem origin) {
-		this(origin.getFeatures(), origin.getEmployees(), origin.getNbWeeks(), origin.getNbHoursByWeek());
-	}
-
-	public NextReleaseProblem(ApiNextReleaseProblem p, double replanHour) {
-		this(p.getPreviousSolution(), p.getFeatures(), p.getResources(), p.getNbWeeks(), p.getHoursPerWeek(), replanHour);
+		this(origin.getFeatures(), origin.getEmployees(), origin.getScheduleSlots(), origin.getNbWeeks(), origin.getNbHoursByWeek());
 	}
 
 	/* ------------ */
@@ -194,18 +214,15 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 
 	@Override
 	public PlanningSolution createSolution() {
-		//return new PlanningSolution(this);
-		if (prevSolution != null) return new PlanningSolution(this, prevSolution.getPlannedFeatures());
-		else return new PlanningSolution(this);
+		return new PlanningSolution(this);
 	}
 
 	@Override
 	public void evaluate(PlanningSolution solution) {
-		Map<Employee, NewSchedule> planning = new HashMap<Employee, NewSchedule>();
 		List<PlannedFeature> plannedFeatures = solution.getPlannedFeatures();
 		
         for (PlannedFeature currentPlannedFeature : plannedFeatures) {
-            computeHours(solution, currentPlannedFeature);
+            //computeHours(solution, currentPlannedFeature);
 			Employee employee = currentPlannedFeature.getEmployee();
 			NewSchedule employeeNewSchedule = planning.getOrDefault(employee, new NewSchedule(employee, nbWeeks, nbHoursByWeek));
 			
@@ -229,11 +246,6 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 		/* Objectives and quality evaluation */
 		SolutionEvaluator evaluator = SolutionEvaluator.getInstance();
 
-		//solution.setObjective(INDEX_PRIORITY_OBJECTIVE, 1.0 - evaluator.completionObjective(solution));
-        //solution.setObjective(INDEX_END_DATE_OBJECTIVE, 1.0 - evaluator.endDateObjective(solution));
-        //solution.setObjective(INDEX_DISTRIBUTION_OBJECTIVE, 1.0 - evaluator.distributionObjective(solution));
-        
-
 		solutionQuality.setAttribute(solution, evaluator.newQuality(solution));
 	}
 
@@ -252,7 +264,8 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 				newBeginHour = Math.max(newBeginHour, previousPlannedFeature.getEndHour());
 			}
 		}
-		if (prevSolution != null && !prevSolution.getPlannedFeatures().contains(pf)) newBeginHour = Math.max(newBeginHour, replanHour);
+		//FIXME Check how new algorithm affects this
+		//if (prevSolution != null && !prevSolution.getPlannedFeatures().contains(pf)) newBeginHour = Math.max(newBeginHour, replanHour);
 		
 		pf.setBeginHour(newBeginHour);
 	}
@@ -266,13 +279,14 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 		// Precedence constraint
 		for (PlannedFeature currentFeature : solution.getPlannedFeatures()) {
 
-			// Ignore precedence constraint if the planned feature is frozen in the previous plan
+			//FIXME check how this affects
+			/*// Ignore precedence constraint if the planned feature is frozen in the previous plan
 			if (	prevSolution != null &&
 					prevSolution.findPlannedFeature(currentFeature.getFeature()) != null &&
 					prevSolution.getPlannedFeatures().contains(currentFeature))
 			{
 			    continue;
-            }
+            }*/
 
 			for (Feature previousFeature : currentFeature.getFeature().getPreviousFeatures()) {
 				PlannedFeature previousPlannedFeature = solution.findPlannedFeature(previousFeature);
@@ -310,7 +324,7 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 			}
 		}
 
-		if (prevSolution != null) {
+		/*if (prevSolution != null) {
 			Map<Feature, Employee> previousFeatures = new HashMap<>();
 
 			// Frozen jobs constraint
@@ -331,7 +345,7 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 					overall -= 0.1;
 				}
 			}
-		}
+		}*/
 
 		numberOfViolatedConstraints.setAttribute(solution, violatedConstraints);
 		overallConstraintViolation.setAttribute(solution, overall);

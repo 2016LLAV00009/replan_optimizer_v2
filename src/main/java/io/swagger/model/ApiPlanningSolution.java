@@ -14,6 +14,7 @@ import java.util.List;
  *
  * @author kredes
  */
+@Deprecated
 public class ApiPlanningSolution {
 
     private List<PlannedFeature> jobs;

@@ -184,7 +184,7 @@ public class SolverNRP {
     }
 
     // Tries to schedule undone features to the least busy employee if there is enough time
-    @Deprecated
+    /*@Deprecated
     private void postprocess(PlanningSolution solution) {
         Utils utils = new Utils(solution);
         NextReleaseProblem problem = solution.getProblem();
@@ -230,7 +230,7 @@ public class SolverNRP {
                 }
             }
         }
-    }
+    }*/
 
     /*
         The generated solution might violate constraints in case the solver does not find a better one.

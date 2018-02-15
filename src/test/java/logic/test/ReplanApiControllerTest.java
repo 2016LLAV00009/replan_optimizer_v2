@@ -1,8 +1,6 @@
 package logic.test;
 import com.google.gson.Gson;
-import entities.Employee;
-import entities.Feature;
-import entities.Skill;
+import entities.*;
 import io.swagger.api.ReplanGson;
 import io.swagger.api.ReplanApiController;
 import io.swagger.model.ApiPlanningSolution;
@@ -10,6 +8,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -39,7 +38,10 @@ public class ReplanApiControllerTest {
 
         random.mix(features, skills, resources);
 
-        MockHttpServletRequest request = mocker.request(4, 40.0, features, resources);
+        DaySlot scheduleSlot = new DaySlot(0,0, 8.,15.,
+                "1", "1", SlotStatus.FREE);
+
+        MockHttpServletRequest request = mocker.request(4, 40.0, features, resources, Arrays.asList(scheduleSlot));
 
         String response = apiController.replan(request).getBody();
 

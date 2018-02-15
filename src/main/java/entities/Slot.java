@@ -1,53 +1,52 @@
 package entities;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class Slot {
 	
-	private HashMap<Integer, WeekSlot> weekSlots;
-	private double beginHour;
-	private double endHour;
-	
-	public Slot(HashMap<Integer, WeekSlot> weekSlots) {
-		this.weekSlots = weekSlots;
-		
-		List<Double> beginHours = new ArrayList<>();
-		List<Double> endHours = new ArrayList<>();
-		for (WeekSlot ws : weekSlots.values()) {
-			beginHours.add(ws.getBeginHour());
-			endHours.add(ws.getEndHour());
-		}
-		this.beginHour = Collections.min(beginHours);
-		this.endHour = Collections.max(endHours);
+	private List<DaySlot> daySlots;
+	private Calendar beginTime;
+	private Calendar endTime;
+	private SlotStatus status;
+
+	public Slot(List<DaySlot> scheduleSlots, SlotStatus status) {
+		this.daySlots = scheduleSlots;
+		this.beginTime = scheduleSlots.get(0).getBeginTime();
+		this.endTime = scheduleSlots.get(scheduleSlots.size() -1).getEndTime();
+		this.status = status;
 	}
 	public boolean isFeatureFit(PlannedFeature pf) {
-		if (pf.getBeginHour() >= getEndHour()) return false;
+		if (!status.equals(SlotStatus.FREE)) return false;
+		if (getEndTime().before(pf.getBeginTime())) return false;
+
 		double leftTime = 0.0;
-		for (WeekSlot ws : weekSlots.values()) {
-			if (ws.getBeginHour() <= pf.getBeginHour() && ws.getDuration() > pf.getFeature().getDuration()) {
-				leftTime += Math.min(ws.getDuration(), ws.getEndHour() - pf.getBeginHour());
-			}
-			else if (pf.getBeginHour() < ws.getBeginHour()) {
-				leftTime += ws.getDuration();
-			}
+		int i = 0;
+		while (pf.getBeginTime().before(daySlots.get(i).getBeginTime())) ++i;
+
+		for (; i < daySlots.size(); ++i) {
+			DaySlot ds = daySlots.get(i);
+			long wholeDayDuration = ds.getDuration();
+			long endDayDuration = ds.getEndTime().getTimeInMillis() - pf.getBeginTime().getTimeInMillis();
+			leftTime += Math.min(wholeDayDuration, endDayDuration);
 		}
-		return leftTime >= pf.getFeature().getDuration();
+
+		return leftTime >= pf.getFeature().getDuration() * 3600000;
+
 	}
 	public double getTotalDuration() {
 		double sum = 0.0;
-		for (WeekSlot ws : weekSlots.values()) sum += ws.getDuration();
+		for (DaySlot ws : daySlots) sum += ws.getDuration();
 		return sum;
 	}
-	public HashMap<Integer, WeekSlot> getWeekSlots() {
-		return weekSlots;
+	public List<DaySlot> getDaySlots() {
+		return daySlots;
 	}
-	public double getBeginHour() {
-		return beginHour;
+
+	public Calendar getBeginTime() {
+		return beginTime;
 	}
-	public double getEndHour() {
-		return endHour;
+
+	public Calendar getEndTime() {
+		return endTime;
 	}
 }

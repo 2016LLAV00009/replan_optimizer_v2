@@ -2,6 +2,7 @@ package logic.test;
 import com.google.gson.Gson;
 import entities.Employee;
 import entities.Feature;
+import entities.DaySlot;
 import io.swagger.api.ReplanGson;
 import io.swagger.model.ApiNextReleaseProblem;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -16,9 +17,9 @@ public class RequestMocker {
     private static Gson gson = ReplanGson.getGson();
 
     public MockHttpServletRequest request(int nbWeeks, double hoursPerWeek,
-                        List<Feature> features, List<Employee> resources)
+                        List<Feature> features, List<Employee> resources, List<DaySlot> scheduleSlots)
     {
-        ApiNextReleaseProblem problem = new ApiNextReleaseProblem(nbWeeks, hoursPerWeek, features, resources);
+        ApiNextReleaseProblem problem = new ApiNextReleaseProblem(nbWeeks, hoursPerWeek, features, resources, scheduleSlots);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setContentType("application/json");

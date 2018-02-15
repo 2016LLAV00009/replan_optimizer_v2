@@ -77,7 +77,7 @@ public class SolutionEvaluator {
     	return (score - solution.getPriorityScore()) / worstScore(solution.getProblem());
     }
     
-    public double similarityObjective(PlanningSolution solution) {
+    /*public double similarityObjective(PlanningSolution solution) {
     	PlanningSolution previousSolution = solution.getProblem().getPreviousSolution();
     	if (previousSolution == null) return 1.0;
     	else  {
@@ -102,7 +102,7 @@ public class SolutionEvaluator {
     		}
     		return score / solution.getPlannedFeatures().size();
     	}
-    }
+    }*/
     
     private double objectivePriorityRange = 0.999;
     
@@ -115,8 +115,9 @@ public class SolutionEvaluator {
         double completionQuality = completionObjective(solution);
         double distributionQuality = distributionObjective(solution);
         double priorityQuality = priorityObjective(solution);
-        double similarityQuality = similarityObjective(solution);
-        
+        //double similarityQuality = similarityObjective(solution);
+        double similarityQuality = 1.0;
+
         double quality = evPar.evaluate(endDateQuality, completionQuality, distributionQuality, priorityQuality, similarityQuality);
         
        /* System.out.println("For " + solution.getPlannedFeatures().size() + " planned features:");

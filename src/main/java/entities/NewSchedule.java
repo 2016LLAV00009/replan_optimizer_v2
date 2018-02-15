@@ -1,80 +1,72 @@
 package entities;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class NewSchedule {
-	
+
     private Employee employee;
-	//private List<WeekSchedule> weeks;
     private Set<PlannedFeature> plannedFeatures;
-    
+
     // The number of hours left this employee has for the whole release
-    private double totalHoursLeft;
-    private final int nbWeeks;
-    private final double hoursPerWeek;
-    private final double globalHoursPerWeek;
-    
-    private double beginHour;
-    private double endHour;
-    
-    private List<Slot> slots; 
+    private long workTimeLeft;
+    // The slot calendar
+    private List<Slot> scheduleSlots;
 
-    public NewSchedule(Employee employee, int nbWeeks, double globalHoursPerWeek) {
-        this.employee = employee;
-        this.nbWeeks = nbWeeks;
-        this.hoursPerWeek = employee.getWeekAvailability();
-        this.globalHoursPerWeek = globalHoursPerWeek;
-        
-        this.beginHour = 0.0;
-        this.endHour = 0.0;
-        
-        HashMap<Integer, WeekSlot> weekSlots = new HashMap<>();
-        this.slots = new ArrayList<>();
-        
-        for (int i = 0; i < nbWeeks; ++i) 
-        	weekSlots.put(i, new WeekSlot(globalHoursPerWeek*i, globalHoursPerWeek*(i+1), hoursPerWeek));
-        
-        slots.add(new Slot(weekSlots));
-        
-        //printSlots();
-        
-        totalHoursLeft = nbWeeks * employee.getWeekAvailability();
+    public NewSchedule() {
 
-        plannedFeatures = new HashSet<>();
-    }
+	}
+
+	/**
+	 *
+	 * @param employee
+	 * @param daySlots MUST be ordered
+	 */
+	public NewSchedule(Employee employee, List<DaySlot> daySlots) {
+		this.employee = employee;
+		this.scheduleSlots = new ArrayList<>();
+
+		List<DaySlot> currentStatusDaySlots = new ArrayList<>();
+		daySlots.add(daySlots.get(0));
+		long workTimeLeft =
+		for (int i = 1; i < daySlots.size(); ++i) {
+			if (daySlots.get(i).getStatus().equals(daySlots.get(i-1).getStatus()))
+				currentStatusDaySlots.add(daySlots.get(i));
+			else {
+				scheduleSlots.add(new Slot(currentStatusDaySlots, daySlots.get(i-1).getStatus()));
+				currentStatusDaySlots = new ArrayList<>();
+			}
+		}
+
+		//Creates a Slot with all the daily slots
+		/*HashMap<Integer, DaySlot> days = new HashMap<>();
+		Collections.sort(daySlots);
+		for (DaySlot s : daySlots) {
+			days.put(0, s);
+		}*/
+		// Fixme initialize slots according to whatever takes
+		// Slot s = new Slot(days,);
+		//this.scheduleSlots.add(s);
+
+		//Calculates the left hours
+		/*totalHoursLeft = 0;
+		for (DaySlot slot : daySlots)
+			if (slot.getStatus().equals(SlotStatus.FREE))
+				totalHoursLeft += slot.getDuration();*/
+
+		//Initializes planning features data structure
+		plannedFeatures = new HashSet<>();
+	}
     
     public NewSchedule(NewSchedule old) {
-		this(old.getEmployee(), old.nbWeeks, old.globalHoursPerWeek);
-		this.beginHour = old.getBeginHour();
-		this.endHour = old.getEndHour();
-		this.slots = old.slots;
+		this();
+		this.scheduleSlots = old.scheduleSlots;
+		this.employee = old.employee;
 		totalHoursLeft = old.getTotalHoursLeft();
 		plannedFeatures = old.plannedFeatures;
 	}
-
-	public double getBeginHour() {
-    	return this.beginHour;
-    }
-    
-    public double getEndHour() {
-    	return this.endHour;
-    }
     
     private void printSlots() {
-    	System.out.println("SLOTS");
-    	for (Slot s : slots){
-    		System.out.println("Slot from " + s.getBeginHour() + " to " + s.getEndHour() + " (" + s.getTotalDuration() +")");
-    		for (Integer week : s.getWeekSlots().keySet()) {
-    	        System.out.println("\tWeek " + week + " from " + s.getWeekSlots().get(week).getBeginHour()+ " to " + 
-    	        		s.getWeekSlots().get(week).getEndHour() + " with " + s.getWeekSlots().get(week).getDuration());
-    	    }
-    	}
+    	//TODO print new schedule
 	}
     
     /* --- PUBLIC --- */
@@ -100,36 +92,43 @@ public class NewSchedule {
     	if (slot == null) 
     		return false;
     	
-    	/*
-    	pf.setBeginHour(Math.max(pf.getBeginHour(), week.getBeginHour()));
-    	double currentHour = pf.getBeginHour();
-    	
-    	while (currentHour < week.getBeginHour() && currentHour < week.getEndHour() && iterator.hasNext()){
-    		week = (WeekSlot) iterator.next();
-    	}*/
-    	pf.setBeginHour(Math.max(pf.getBeginHour(), slot.getBeginHour()));
-    	double currentHour = pf.getBeginHour();
-    	
-    	Collection<WeekSlot> weeks = slot.getWeekSlots().values();
+    	if (pf.getBeginTime().after(slot.getBeginTime())) pf.setBeginTime(pf.getBeginTime());
+    	else pf.setBeginTime(slot.getBeginTime());
+    	Calendar currentTime = pf.getBeginTime();
+
+    	Collection<DaySlot> weeks = slot.getDaySlots().values();
     	Iterator iterator = weeks.iterator();
-    	WeekSlot week = (WeekSlot) iterator.next();
-    	while (iterator.hasNext() && week.getBeginHour() < pf.getBeginHour() && week.getEndHour() <= pf.getBeginHour()) {
-    		week = (WeekSlot) iterator.next();
+    	DaySlot day = (DaySlot) iterator.next();
+
+    	while (iterator.hasNext() &&
+				day.getBeginTime().before(pf.getBeginTime()) &&
+				pf.getBeginTime().after(day.getEndTime())) {
+    		day = (DaySlot) iterator.next();
     	}
     	
     	while (featureHoursLeft > 0.0) {
-    		double doneHours = Math.min(featureHoursLeft, week.getDuration());
-    		doneHours = Math.min(doneHours, week.getEndHour() - currentHour);
+
+    		double doneHours = Math.min(featureHoursLeft, day.getDuration());
+    		doneHours = Math.min(doneHours, hoursBetween(currentTime, day.getEndTime()));
+
     		featureHoursLeft -= doneHours;
     		totalHoursLeft -= doneHours;
-    		currentHour += doneHours;
-    		if (featureHoursLeft > 0.0 && currentHour % globalHoursPerWeek != 0) {
-    			currentHour += (globalHoursPerWeek - currentHour % globalHoursPerWeek);
-    		}
-    		if (featureHoursLeft > 0.0 && iterator.hasNext()) week = (WeekSlot) iterator.next();
+    		currentTime.add(Calendar.HOUR_OF_DAY, (int) Math.floor(doneHours));
+    		currentTime.add(Calendar.MINUTE, (int) (doneHours - Math.floor(doneHours) * 60));
+
+    		//FIXME:
+			// 1) day has been filled
+			// 2) day has been filled, but feature continues
+			// 3) day has not been filled
+
+    		if (featureHoursLeft > 0.0 && iterator.hasNext()) {
+    			day.setStatus(SlotStatus.USED);
+    			day = (DaySlot) iterator.next();
+    			currentTime = day.getBeginTime();
+			} else if (featureHoursLeft == 0.0) day.setStatus(SlotStatus.USED);
     	}
     	
-    	pf.setEndHour(currentHour);
+    	pf.setEndTime(currentTime);
     	
     	plannedFeatures.add(pf);
     	    	    	 
@@ -143,46 +142,50 @@ public class NewSchedule {
     	
     }
 
+	public double hoursBetween(Calendar d1, Calendar d2){
+		return (d1.getTimeInMillis() - d2.getTimeInMillis()) / 3600000;
+	}
+
 	private void updateSlots(PlannedFeature pf, Slot slot) throws Exception {
 		
-		int i = slots.indexOf(slot);
+		/*int i = slots.indexOf(slot);
 		
-		HashMap<Integer, WeekSlot> beforeWeekSlots = new HashMap<>();
-		HashMap<Integer, WeekSlot> afterWeekSlots = new HashMap<>();
+		HashMap<Integer, DaySlot> beforeWeekSlots = new HashMap<>();
+		HashMap<Integer, DaySlot> afterWeekSlots = new HashMap<>();
 		
 		List<Integer> removedWeeks = new ArrayList<>();
 								
 		for (Integer week : slot.getWeekSlots().keySet()) {
-			WeekSlot weekSlot = slot.getWeekSlots().get(week);
+			DaySlot daySlot = slot.getWeekSlots().get(week);
 			
-			if (weekSlot.getEndHour() <= pf.getBeginHour()) {
-				beforeWeekSlots.put(week, new WeekSlot(weekSlot.getBeginHour(), weekSlot.getEndHour(), weekSlot.getDuration()));
+			if (daySlot.getEndHour() <= pf.getBeginHour()) {
+				beforeWeekSlots.put(week, new DaySlot(daySlot.getBeginHour(), daySlot.getEndHour(), daySlot.getDuration()));
 			} 
 			
-			else if (weekSlot.getBeginHour() >= pf.getEndHour()) {
-				afterWeekSlots.put(week, new WeekSlot(weekSlot.getBeginHour(), weekSlot.getEndHour(), weekSlot.getDuration()));
+			else if (daySlot.getBeginHour() >= pf.getEndHour()) {
+				afterWeekSlots.put(week, new DaySlot(daySlot.getBeginHour(), daySlot.getEndHour(), daySlot.getDuration()));
 			} 
 			
-			else if (weekSlot.getBeginHour() < pf.getBeginHour()
-					&& weekSlot.getEndHour() <= pf.getEndHour()) {
-				double duration = weekSlot.getDuration() - (weekSlot.getEndHour() - pf.getBeginHour());
+			else if (daySlot.getBeginHour() < pf.getBeginHour()
+					&& daySlot.getEndHour() <= pf.getEndHour()) {
+				double duration = daySlot.getDuration() - (daySlot.getEndHour() - pf.getBeginHour());
 				if (duration > 0.0)
-					beforeWeekSlots.put(week, new WeekSlot(weekSlot.getBeginHour(), pf.getBeginHour(), duration));
+					beforeWeekSlots.put(week, new DaySlot(daySlot.getBeginHour(), pf.getBeginHour(), duration));
 			} 
 			
-			else if (weekSlot.getBeginHour() >= pf.getBeginHour()
-					&& weekSlot.getEndHour() > pf.getEndHour()) {
-				double duration = weekSlot.getDuration() - (pf.getEndHour() - weekSlot.getBeginHour());
+			else if (daySlot.getBeginHour() >= pf.getBeginHour()
+					&& daySlot.getEndHour() > pf.getEndHour()) {
+				double duration = daySlot.getDuration() - (pf.getEndHour() - daySlot.getBeginHour());
 				if (duration > 0.0)
-					afterWeekSlots.put(week, new WeekSlot(pf.getEndHour(), weekSlot.getEndHour(), duration));
+					afterWeekSlots.put(week, new DaySlot(pf.getEndHour(), daySlot.getEndHour(), duration));
 			} 
 			
-			else if (weekSlot.getBeginHour() < pf.getBeginHour()
-					&& weekSlot.getEndHour() > pf.getEndHour()) {
-				double duration = Math.max(0, weekSlot.getDuration() - pf.getFeature().getDuration());
+			else if (daySlot.getBeginHour() < pf.getBeginHour()
+					&& daySlot.getEndHour() > pf.getEndHour()) {
+				double duration = Math.max(0, daySlot.getDuration() - pf.getFeature().getDuration());
 				if (duration > 0.0) {
-					beforeWeekSlots.put(week, new WeekSlot(weekSlot.getBeginHour(), pf.getBeginHour(), Math.min(duration, pf.getBeginHour() - weekSlot.getBeginHour())));
-					afterWeekSlots.put(week, new WeekSlot(pf.getEndHour(), weekSlot.getEndHour(), Math.min(duration, weekSlot.getEndHour() - pf.getEndHour())));
+					beforeWeekSlots.put(week, new DaySlot(daySlot.getBeginHour(), pf.getBeginHour(), Math.min(duration, pf.getBeginHour() - daySlot.getBeginHour())));
+					afterWeekSlots.put(week, new DaySlot(pf.getEndHour(), daySlot.getEndHour(), Math.min(duration, daySlot.getEndHour() - pf.getEndHour())));
 				}
 			} 
 			else	removedWeeks.add(week);
@@ -203,7 +206,8 @@ public class NewSchedule {
 		this.beginHour = Math.min(beginHour, pf.getBeginHour());
 		this.endHour = Math.max(endHour, pf.getEndHour());
 		//System.out.println("After scheduling:");
-		//printSlots();
+		//printSlots();*/
+		//FIXME Check how to update new slot structure
 		
 	}
 
@@ -215,11 +219,10 @@ public class NewSchedule {
 
 	private Slot getFirstAvailableSlot(PlannedFeature pf) {
 		int i = 0;
-		while (i < slots.size()) {
-			if (slots.get(i).isFeatureFit(pf)) {
-				return slots.get(i);
+		while (i < scheduleSlots.size()) {
+			if (scheduleSlots.get(i).isFeatureFit(pf)) {
+				return scheduleSlots.get(i);
 			}
-			else ++i;
 		}
 		return null;
 	}
@@ -236,13 +239,15 @@ public class NewSchedule {
 
     public double getTotalHoursLeft() { return totalHoursLeft; }
 
-    public void clear() {
-        //weeks.clear();
-        plannedFeatures.clear();
-        totalHoursLeft = nbWeeks * employee.getWeekAvailability();
-    }
-    
-    @Override
+	public List<Slot> getScheduleSlots() {
+		return scheduleSlots;
+	}
+
+	public void setScheduleSlots(List<Slot> scheduleSlots) {
+		this.scheduleSlots = scheduleSlots;
+	}
+
+	@Override
     public String toString() {
         double availability = employee.getWeekAvailability();
         double hours = availability * nbWeeks - totalHoursLeft;
@@ -260,7 +265,7 @@ public class NewSchedule {
         NewSchedule schedule = (NewSchedule) o;
 
         if (Double.compare(schedule.totalHoursLeft, totalHoursLeft) != 0) return false;
-        if (nbWeeks != schedule.nbWeeks) return false;
+        //if (nbWeeks != schedule.nbWeeks) return false;
         if (!employee.equals(schedule.employee)) return false;
         return plannedFeatures != null ? plannedFeatures.equals(schedule.plannedFeatures) : schedule.plannedFeatures == null;
     }
@@ -273,7 +278,7 @@ public class NewSchedule {
         result = 31 * result + (plannedFeatures != null ? plannedFeatures.hashCode() : 0);
         temp = Double.doubleToLongBits(totalHoursLeft);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
-        result = 31 * result + nbWeeks;
+        //result = 31 * result + nbWeeks;
         return result;
     }
 	

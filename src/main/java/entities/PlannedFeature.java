@@ -3,6 +3,10 @@ package entities;
 import com.google.gson.annotations.SerializedName;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
 /**
  * Describes a feature in a planning
  * Contains 
@@ -22,28 +26,27 @@ public class PlannedFeature {
 	private boolean frozen;
 
 	/**
-	 * The begin hour of the planned feature
-	 */
-	private double beginHour;
-
-	/**
 	 * The employee who will do the feature
 	 */
 	@SerializedName("resource")
 	private Employee employee;
 	
 	/**
-	 * The end hour of the planned feature
-	 */
-	private double endHour;
-	
-	/**
 	 * The feature to do
 	 */
 	private Feature feature;
 
+	private List<DaySlot> daySlots;
+
+	private Calendar beginTime;
+	private Calendar endTime;
+
 	
 	/* --- Getters and setters --- */
+
+	@ApiModelProperty(value="")
+	public List<DaySlot> getDaySlots() { return this.daySlots; }
+	public void setDaySlots(List<DaySlot> daySlots) { this.daySlots = daySlots; }
 
 	@ApiModelProperty(value = "")
 	public boolean isFrozen() {
@@ -52,15 +55,6 @@ public class PlannedFeature {
 
 	public void setFrozen(boolean frozen) {
 		this.frozen = frozen;
-	}
-
-	@ApiModelProperty(value = "")
-	public double getBeginHour() {
-		return beginHour;
-	}
-
-	public void setBeginHour(double beginHour) {
-		this.beginHour = beginHour;
 	}
 
 	@ApiModelProperty(value = "")
@@ -73,15 +67,6 @@ public class PlannedFeature {
 	}
 
 	@ApiModelProperty(value = "")
-	public double getEndHour() {
-		return endHour;
-	}
-
-	public void setEndHour(double endHour) {
-		this.endHour = endHour;
-	}
-
-	@ApiModelProperty(value = "")
 	public Feature getFeature() {
 		return feature;
 	}
@@ -89,8 +74,23 @@ public class PlannedFeature {
 	public void setFeature(Feature feature) {
 		this.feature = feature;
 	}
-	
-	
+
+	public void setBeginTime(Calendar beginTime) {
+		this.beginTime = beginTime;
+	}
+
+	public void setEndTime(Calendar endTime) {
+		this.endTime = endTime;
+	}
+
+	public Calendar getBeginTime() {
+		return this.beginTime;
+	}
+
+	public Calendar getEndTime() {
+		return this.endTime;
+	}
+
 	/* --- Constructors --- */
 
     public PlannedFeature() {}
@@ -103,7 +103,7 @@ public class PlannedFeature {
 	public PlannedFeature(Feature feature, Employee employee) {
 		this.feature = feature;
 		this.employee = employee;
-		beginHour = 0.0;
+		this.daySlots = new ArrayList<>();
 	}
 	
 	/**
@@ -112,11 +112,10 @@ public class PlannedFeature {
 	 */
 	public PlannedFeature(PlannedFeature origin) {
 		this.employee = origin.getEmployee();
-		this.beginHour = origin.getBeginHour();
 		this.feature = origin.getFeature();
-		this.endHour = origin.getEndHour();
+		this.daySlots = origin.getDaySlots();
 	}
-	
+
 	/* --- Methods --- */
 	
 	@Override
@@ -131,18 +130,17 @@ public class PlannedFeature {
 
 		return other.getFeature().equals(this.getFeature()) &&
 				other.getEmployee().equals(this.getEmployee()) &&
-				other.getBeginHour() == this.getBeginHour() && 
-				other.getEndHour() == this.getEndHour();
+				other.getDaySlots().equals(this.getDaySlots());
 	}
 	
 	@Override
 	public int hashCode() {
-		return new Double(getBeginHour()).intValue();
+		return feature.hashCode() + employee.hashCode() + daySlots.hashCode();
 	}
 	
 	@Override
 	public String toString() {
 		return String.valueOf(getFeature()) + " done by " + getEmployee() +
-				" from " + getBeginHour() + " to " + getEndHour();
+				" from " + daySlots.get(0).getBeginTime() + " to " + daySlots.get(daySlots.size()-1).getEndTime();
 	}
 }

@@ -11,13 +11,13 @@ import java.util.stream.Collectors;
 
 import com.google.gson.JsonSyntaxException;
 
+import entities.DaySlot;
 import entities.Employee;
 import entities.Feature;
 import entities.parameters.AlgorithmParameters;
 import entities.parameters.EvaluationParameters;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.api.ReplanGson;
-import logic.PlanningSolution;
 
 /**
  * Convenience data class for receiving data from the API call.
@@ -29,8 +29,6 @@ import logic.PlanningSolution;
 public class ApiNextReleaseProblem {
 
     private static final String DATASET_PATH = "src/test/datasets";
-
-    private PlanningSolution previousSolution = null;
 
     private int nbWeeks;
 
@@ -46,6 +44,8 @@ public class ApiNextReleaseProblem {
 
     private EvaluationParameters evaluationParameters = null;
 
+    private List<DaySlot> scheduleSlots = null;
+
 
     /* --- CONSTRUCTORS --- */
 
@@ -54,21 +54,22 @@ public class ApiNextReleaseProblem {
         resources = new ArrayList<>();
     }
 
-    public ApiNextReleaseProblem(Integer nbWeeks, Double hoursPerWeek, List<Feature> features, List<Employee> resources) {
+    public ApiNextReleaseProblem(Integer nbWeeks, Double hoursPerWeek,
+                                 List<Feature> features, List<Employee> resources, List<DaySlot> scheduleSlots) {
         this.nbWeeks = nbWeeks;
         this.hoursPerWeek = hoursPerWeek;
         this.features = features;
         this.resources = resources;
         this.algorithmParameters = new AlgorithmParameters();
         this.evaluationParameters = new EvaluationParameters();
+        this.scheduleSlots = scheduleSlots;
     }
 
     public ApiNextReleaseProblem(
             Integer nbWeeks, Double hoursPerWeek, List<Feature> features, List<Employee> resources,
-            PlanningSolution previousSolution, double replanHour)
+            List<DaySlot> scheduleSlots, double replanHour)
     {
-        this(nbWeeks, hoursPerWeek, features, resources);
-        this.previousSolution = previousSolution;
+        this(nbWeeks, hoursPerWeek, features, resources, scheduleSlots);
         this.replanHour = replanHour;
     }
 
@@ -97,14 +98,9 @@ public class ApiNextReleaseProblem {
 
     /* --- GETTERS / SETTERS --- */
 
-
     @ApiModelProperty(value = "")
-    public PlanningSolution getPreviousSolution() {
-        return previousSolution;
-    }
-    public void setPreviousSolution(PlanningSolution plan) {
-        previousSolution = plan;
-    }
+    public List<DaySlot> getScheduleSlots() { return scheduleSlots; }
+    public void setScheduleSlot(List<DaySlot> scheduleSlots) { this.scheduleSlots = scheduleSlots; }
 
     @ApiModelProperty(value = "")
     public int getNbWeeks() { return nbWeeks; }

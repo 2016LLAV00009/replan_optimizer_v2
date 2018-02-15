@@ -72,9 +72,9 @@ public class ReplanValidationTest {
         System.out.println("Adding a new employee and replanning at " + replanHour);
         PlanningSolution planningSolution = new PlanningSolution(solution);
         
-        NextReleaseProblem replanProblem = new NextReleaseProblem(planningSolution, features, employees, 5, 40.0, replanHour);
-        PlanningSolution replanSolution = solver.executeNRP(replanProblem);
-        System.out.println(replanSolution.toString());
+        //NextReleaseProblem replanProblem = new NextReleaseProblem(planningSolution, features, employees, 5, 40.0, replanHour);
+        //PlanningSolution replanSolution = solver.executeNRP(replanProblem);
+        //System.out.println(replanSolution.toString());
         /*for (Employee e : replanSolution.getEmployeesPlanning().keySet()) {
         	System.out.println("Employee " + e.getName());
         	for (WeekSchedule w : replanSolution.getEmployeesPlanning().get(e).getAllWeeks()) {
@@ -151,9 +151,9 @@ public class ReplanValidationTest {
         features.addAll(smallFeatures);
         
         PlanningSolution planningSolution = new PlanningSolution(solution);
-        NextReleaseProblem replanProblem = new NextReleaseProblem(planningSolution, features, employees, 5, 40.0, replanHour);
+       /* NextReleaseProblem replanProblem = new NextReleaseProblem(planningSolution, features, employees, 5, 40.0, replanHour);
         PlanningSolution replanSolution = solver.executeNRP(replanProblem);
-        System.out.println(replanSolution.toString());
+        System.out.println(replanSolution.toString());*/
         
 	}
 	

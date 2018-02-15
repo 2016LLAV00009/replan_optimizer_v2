@@ -3,6 +3,8 @@
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import entities.DaySlot;
+import entities.SlotStatus;
 import io.swagger.model.ApiNextReleaseProblem;
 import io.swagger.model.ApiPlanningSolution;
 import logic.NextReleaseProblem;
@@ -14,9 +16,10 @@ import org.springframework.stereotype.Controller;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
+import java.util.Arrays;
 
 
-@javax.annotation.Generated(value = "class io.swagger.codegen.languages.SpringCodegen", date = "2016-10-01T15:48:29.618Z")
+ @javax.annotation.Generated(value = "class io.swagger.codegen.languages.SpringCodegen", date = "2016-10-01T15:48:29.618Z")
 
 @Controller
 public class ReplanApiController implements ReplanApi {
@@ -34,11 +37,13 @@ public class ReplanApiController implements ReplanApi {
 
         try {
             ApiNextReleaseProblem p = gson.fromJson(content, ApiNextReleaseProblem.class);
+            DaySlot scheduleSlot = new DaySlot(0, 0, 8.0, 17.0,
+                    "E001", "F001", SlotStatus.FREE);
 
             // Convert to internal model
             NextReleaseProblem problem =
-                    new NextReleaseProblem(p.getFeatures(), p.getResources(), p.getNbWeeks(), p.getHoursPerWeek());
-            problem.setPreviousSolution(p.getPreviousSolution());
+                    new NextReleaseProblem(p.getFeatures(), p.getResources(), Arrays.asList(scheduleSlot), p.getNbWeeks(), p.getHoursPerWeek());
+            //problem.setPreviousSolution(p.getPreviousSolution());
             problem.setReplanHour(p.getReplanHour());
             problem.setAlgorithmParameters(problem.getAlgorithmParameters());
             problem.setEvaluationParameters(problem.getEvaluationParameters());
