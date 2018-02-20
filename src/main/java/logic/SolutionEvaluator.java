@@ -24,7 +24,7 @@ public class SolutionEvaluator {
     /* --- OBJECTIVES --- */
     public double completionObjective(PlanningSolution solution) {
     	if (solution.getProblem().getFeatures().size() == 0) return 0.0;
-        return 1.0 - (double) solution.getUndoneFeatures().size() / (double) (solution.getProblem().getFeatures().size());
+        return (double) solution.getUndoneFeatures().size() / (double) (solution.getProblem().getFeatures().size());
     }
 
     public double endDateObjective(PlanningSolution solution) {
@@ -35,7 +35,7 @@ public class SolutionEvaluator {
         double worstEndDate = problem.getNbWeeks() * problem.getNbHoursByWeek();
 
         //return solution.getPlannedFeatures().isEmpty() ? worstEndDate : solution.getEndDate();
-        return 1.0 - Math.max(0.0,(solution.getEndDate() - solution.computeCriticalPath()) / (worstEndDate - solution.computeCriticalPath()));
+        return Math.max(0.0,(solution.getEndDate() - solution.computeCriticalPath()) / (worstEndDate - solution.computeCriticalPath()));
     }
     
     public double distributionObjective(PlanningSolution solution) {
@@ -54,30 +54,30 @@ public class SolutionEvaluator {
             avg += ratio;
         }
         
-        double totalEmployees = solution.getProblem().getEmployees().size();
+        double totalEmployees = solution.getEmployeesPlanning().entrySet().size();
         //Calculates the standard deviation of the hours
         double expectedAvg = avg/totalEmployees;
         double sum = 0.0;
         for (Double nbHours : hoursPerEmployee.values()) {
-            sum += Math.pow(Math.abs(nbHours - expectedAvg), 2);
+            sum += Math.pow(nbHours - expectedAvg, 2);
         }
         double standardDeviation = Math.sqrt(sum/totalEmployees);
         
         //Normalizes the standard deviation
-        double max = ((totalEmployees - 1.0) * Math.pow(expectedAvg, 2) + Math.pow(avg - expectedAvg, 2))/totalEmployees;
+        double max = Math.sqrt(((totalEmployees - 1.0) * Math.pow(expectedAvg, 2) + Math.pow(avg - expectedAvg, 2))/totalEmployees);
         double normalizedSd = max > 0 ? standardDeviation / max : 0;
         		
-        return 1.0 - normalizedSd;
+        return normalizedSd;
     }
     
     public double priorityObjective(PlanningSolution solution) {
         double score = worstScore(solution.getProblem());
-    	return (score - solution.getPriorityScore()) / worstScore(solution.getProblem());
+    	return 1.0 - (score - solution.getPriorityScore()) / worstScore(solution.getProblem());
     }
     
     public double similarityObjective(PlanningSolution solution) {
     	ApiPlanningSolution previousSolution = solution.getProblem().getPreviousSolution();
-    	if (previousSolution == null) return 1.0;
+    	if (previousSolution == null) return 0.0;
     	else  {
     		double score = 0.0;
     		for (int i = 0; i < solution.getPlannedFeatures().size(); ++i) {
@@ -93,52 +93,50 @@ public class SolutionEvaluator {
     				score += 1.0 - realDiff / maxDiff;
     			}
     		}
-    		return score / solution.getPlannedFeatures().size();
+    		return 1.0 - score / solution.getPlannedFeatures().size();
     	}
     }
     
     private double objectivePriorityRange = 0.999;
+
+    public double getObjectivePerPriorityLevel(PlanningSolution solution, int i) {
+        EvaluationParameters evaluationParameters = solution.getProblem().getEvaluationParameters();
+        HashMap<Integer, Double> objectives = evaluationParameters.getObjectivesOfPriority(i);
+        double score = 0.0;
+        for (Integer objectiveIndex : objectives.keySet()) {
+            switch(objectiveIndex) {
+                case EvaluationParameters.completionQuality:
+                    score += completionObjective(solution) * objectives.get(objectiveIndex);
+                    break;
+                case EvaluationParameters.distributionQuality:
+                    score += distributionObjective(solution) * objectives.get(objectiveIndex);
+                    break;
+                case EvaluationParameters.endDateQuality:
+                    score += endDateObjective(solution) * objectives.get(objectiveIndex);
+                    break;
+                case EvaluationParameters.priorityQuality:
+                    score += priorityObjective(solution) * objectives.get(objectiveIndex);
+                    break;
+                case EvaluationParameters.similarityQuality:
+                    score += similarityObjective(solution) * objectives.get(objectiveIndex);
+                default:
+                    break;
+            }
+        }
+        double max = objectivePriorityRange / Math.pow(10, i*3);
+        return score * max;
+    }
     
     /* --- NEW QUALITY --- */
     public double newQuality(PlanningSolution solution) {
-        
-        double endDateQuality = endDateObjective(solution);
-        double completionQuality = completionObjective(solution);
-        double distributionQuality = distributionObjective(solution);
-        double priorityQuality = priorityObjective(solution);
-        double similarityQuality = similarityObjective(solution);
-        
+
         EvaluationParameters evaluationParameters = solution.getProblem().getEvaluationParameters();
         int priorityLevels = evaluationParameters.getPriorityLevels();
         
         double quality = 0.0;
         
         for (int i = 0; i < priorityLevels; ++i) {
-        	HashMap<Integer, Double> objectives = evaluationParameters.getObjectivesOfPriority(i);
-        	double score = 0.0;
-        	for (Integer objectiveIndex : objectives.keySet()) {
-        		switch(objectiveIndex) {
-        			case EvaluationParameters.completionQuality:
-        				score += completionQuality * objectives.get(objectiveIndex);
-        				break;
-        			case EvaluationParameters.distributionQuality:
-        				score += distributionQuality * objectives.get(objectiveIndex);
-        				break;
-        			case EvaluationParameters.endDateQuality:
-        				score += endDateQuality * objectives.get(objectiveIndex);
-        				break;
-        			case EvaluationParameters.priorityQuality:
-        				score += priorityQuality * objectives.get(objectiveIndex);
-        				break;
-        			case EvaluationParameters.similarityQuality:
-        				score += similarityQuality * objectives.get(objectiveIndex);
-    				default:
-    					break;
-        		}
-        	}
-        	double max = objectivePriorityRange / Math.pow(10, i*3);
-        	quality += score * max;
-        	//quality += score / Math.pow(10, i*3);
+        	quality += getObjectivePerPriorityLevel(solution, i);
         }
         
         /*System.out.println("For " + solution.getPlannedFeatures().size() + " planned features:");
@@ -146,7 +144,7 @@ public class SolutionEvaluator {
         System.out.println("Completion " + completionQuality);
         System.out.println("Distirbution " + distributionQuality);
         System.out.println("Priority " + priorityScore);*/
-
+        //System.out.println(quality);
         return quality;
     	
     }

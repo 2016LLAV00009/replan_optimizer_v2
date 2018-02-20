@@ -183,81 +183,17 @@ public class SolverNRP {
         return solution;
     }
 
-    // Tries to schedule undone features to the least busy employee if there is enough time
-    @Deprecated
-    private void postprocess(PlanningSolution solution) {
-        Utils utils = new Utils(solution);
-        NextReleaseProblem problem = solution.getProblem();
-        Map<Employee, EmployeeAnalytics> employeesInfo = new HashMap<>();
+    public List<PlanningSolution> executeNRPlist(NextReleaseProblem problem) {
+        if (problem.getAlgorithmParameters() == null)
+            problem.setAlgorithmParameters(new AlgorithmParameters(algorithmType));
+        else
+            algorithmType = problem.getAlgorithmParameters().getAlgorithmType();
 
-        for (Employee e : solution.getProblem().getEmployees())
-            employeesInfo.put(e, new EmployeeAnalytics(e, solution));
+        if (problem.getEvaluationParameters() == null)
+            problem.setEvaluationParameters(new EvaluationParameters());
 
-        for (Feature f : solution.getUndoneFeatures()) {
+        return this.generatePlanningSolutions(problem);
 
-            // Skip any frozen feature left unplanned because it would likely generate an invalid solution
-            if (problem.getPreviousSolution() != null) {
-                PlannedFeature pf = problem.getPreviousSolution().findJobOf(f);
-                if (pf != null && pf.isFrozen())
-                    continue;
-            }
-
-            if (utils.allPrecedencesArePlanned(f)) {
-                List<Employee> doableBy = utils.doableBy(f).stream()
-                        .filter(e -> utils.hadEnoughTime(e, f))
-                        .filter(e -> utils.couldRespectPrecedences(e, f))
-                        .collect(Collectors.toList());
-
-                if (!doableBy.isEmpty()) {
-                    Employee e = doableBy.get(0);
-
-                    // Let's assign it to the least busy employee
-                    for (Employee e2 : doableBy)
-                        if (employeesInfo.get(e2).getWorkload() < employeesInfo.get(e).getWorkload())
-                            e = e2;
-
-                    PlannedFeature pf = new PlannedFeature(f, e);
-                    utils.computeHours(pf);
-                    NewSchedule s = solution.getEmployeesPlanning().get(e);
-
-                    s.scheduleFeature(pf);
-
-                    // Don't forget to update the solution's internal state
-                    solution.getPlannedFeatures().add(pf);
-                    solution.getUndoneFeatures().remove(f);
-                    //FIXME updated end date when reprocessing
-                    solution.setEndDate(Math.max(pf.getEndHour(), solution.getEndDate()));
-                }
-            }
-        }
-    }
-
-    /*
-        The generated solution might violate constraints in case the solver does not find a better one.
-        In that case, the planning is invalid and should be cleared.
-    */
-    private void clearSolutionIfNotValid(PlanningSolution solution) {
-        NumberOfViolatedConstraints<PlanningSolution> numberOfViolatedConstraints = new NumberOfViolatedConstraints<>();
-        // TODO: We should know the reason of the violation.
-        if (numberOfViolatedConstraints.getAttribute(solution) > 0) {
-            solution.getEmployeesPlanning().clear();
-            for (PlannedFeature plannedFeature : solution.getPlannedFeatures())
-                solution.unschedule(plannedFeature);
-        }
-    }
-
-    private PlanningSolution generatePlanningSolution(NextReleaseProblem problem) {
-
-        algorithm = createAlgorithm(algorithmType, problem);
-        
-        new AlgorithmRunner.Executor(algorithm).execute();
-
-        List<PlanningSolution> result = algorithm.getResult();
-        PlanningSolution bestSolution = PopulationFilter.getBestSolutions(result).iterator().next();
-
-        printQuality(result, bestSolution);
-
-        return bestSolution;
     }
     
     private static final int POPULATION_MEASURE = 0;
@@ -323,6 +259,63 @@ public class SolverNRP {
 
         return bestSolution;
         
+    }
+
+    private List<PlanningSolution> generatePlanningSolutions(NextReleaseProblem problem) {
+
+        CrossoverOperator<PlanningSolution> crossover;
+        MutationOperator<PlanningSolution> mutation;
+        SelectionOperator<List<PlanningSolution>, PlanningSolution> selection;
+        SequentialSolutionListEvaluator<PlanningSolution> evaluator;
+
+
+        crossover = new PlanningCrossoverOperator(problem);
+        mutation = new PlanningMutationOperator(problem);
+        //selection = new BinaryTournamentSelection<>(new PlanningSolutionDominanceComparator());
+        selection = new BinaryTournamentSelection<>();
+        evaluator = new SequentialSolutionListEvaluator<>();
+
+        AlgorithmParameters parameters = problem.getAlgorithmParameters();
+        int nbIterations = parameters.getNumberOfIterations();
+        int populationSize = parameters.getPopulationSize();
+
+        CustomAlgorithm algorithm = new CustomAlgorithm(problem, nbIterations, populationSize, crossover, mutation, selection, evaluator);
+        PullMeasure<List<PlanningSolution>> populationMeasure = algorithm.getMeasureManager().getPullMeasure(POPULATION_MEASURE);
+        PullMeasure<Integer> iterationMeasure = algorithm.getMeasureManager().getPullMeasure(MEASURE);
+
+        Thread thread = new Thread(algorithm);
+        thread.start();
+
+        SolutionQuality quality = new SolutionQuality();
+        StringBuilder sb = new StringBuilder();
+        int lastIt = -1;
+        while (thread.isAlive()) {
+            List<PlanningSolution> newPopulation = populationMeasure.get();
+            int currentIt = iterationMeasure.get();
+            if (newPopulation != null && currentIt != lastIt) {
+                lastIt = currentIt;
+                try {
+                    PlanningSolution ps = PopulationFilter.getBestSolution(newPopulation);
+                    if (ps != null && quality.getAttribute(ps) != null) {
+                        sb.append("Current population " + newPopulation.size() + " (iteration " + iterationMeasure.get() + "):\n");
+                        sb.append("Best solution " + ps.getPlannedFeatures().size() + " features with " + quality.getAttribute(ps) + "\n");
+                    }
+                } catch (Exception e) {
+
+                }
+            }
+        }
+        try {
+            PrintWriter out = new PrintWriter("/home/jmotger/Escritorio/experiments/data.txt");
+            out.println(sb.toString());
+            out.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        List<PlanningSolution> result = algorithm.getResult();
+        return result;
+
     }
 
 	private void printQuality(List<PlanningSolution> solutions, PlanningSolution best) {

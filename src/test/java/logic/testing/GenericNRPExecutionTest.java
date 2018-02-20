@@ -138,14 +138,12 @@ private static final Logger logger = LoggerFactory.getLogger(ValidatePlanningSol
 
         NextReleaseProblem problem = new NextReleaseProblem(features, employees, 4, 40.0);
         System.out.println(problem.toString());
-        for (int i = 0; i < 5; ++i) {
-            PlanningSolution solution = solver.executeNRP(problem);
-            System.out.println(solution.toString());
-            validator.validateAll(solution);
+        for (int i = 0; i < 1; ++i) {
+            List<PlanningSolution> solutions = solver.executeNRPlist(problem);
 
-            Analytics analytics = new Analytics(solution);
+            for (PlanningSolution solution : solutions)
+                System.out.println(solution.toString());
 
-            solutionToDataFile(solution);
         }
     }
 	

@@ -41,6 +41,13 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
     private static final int INDEX_PRIORITY_OBJECTIVE = 0; // The index of the priority score objective in the objectives list
 	private static final int INDEX_END_DATE_OBJECTIVE = 1; // The index of the end date objective in the objectives list
 	private static final int INDEX_DISTRIBUTION_OBJECTIVE = 2;	// Make sure to
+	private static final int INDEX_COMPLETION_OBJECTIVE = 3;
+	private static final int INDEX_SIMILARITY_OBJECTIVE = 4;
+
+	private static final int INDEX_HIGH_PRIORITY_OBJECTIVE = 0;
+	private static final int INDEX_LOW_PRIORITY_OBJECTIVE = 1;
+
+	private static final int INDEX_SINGLE_OBJECTIVE = 0;
 	
 	private static final Logger logger = LoggerFactory.getLogger(NextReleaseProblem.class);
 
@@ -114,7 +121,7 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 	public NextReleaseProblem() {
 		setName("Next Release Problem");
 		setNumberOfVariables(1);
-		setNumberOfObjectives(4);
+		setNumberOfObjectives(5);
 		features = new ArrayList<>();
 		numberOfViolatedConstraints = new NumberOfViolatedConstraints<>();
 		overallConstraintViolation = new OverallConstraintViolation<>();
@@ -227,14 +234,36 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 		solution.setEndDate(endHour);
 
 		/* Objectives and quality evaluation */
-		SolutionEvaluator evaluator = SolutionEvaluator.getInstance();
+		//setSingleObjective(solution);
+		//setObjectivesWithPriorityLevel(solution);
+		setObjectivesWithEqualWeight(solution);
 
 		//solution.setObjective(INDEX_PRIORITY_OBJECTIVE, 1.0 - evaluator.completionObjective(solution));
         //solution.setObjective(INDEX_END_DATE_OBJECTIVE, 1.0 - evaluator.endDateObjective(solution));
         //solution.setObjective(INDEX_DISTRIBUTION_OBJECTIVE, 1.0 - evaluator.distributionObjective(solution));
         
 
-		solutionQuality.setAttribute(solution, evaluator.newQuality(solution));
+		//solutionQuality.setAttribute(solution, evaluator.newQuality(solution));
+	}
+
+	private void setSingleObjective(PlanningSolution solution) {
+		SolutionEvaluator evaluator = SolutionEvaluator.getInstance();
+		solution.setObjective(INDEX_SINGLE_OBJECTIVE, evaluator.newQuality(solution));
+	}
+
+	private void setObjectivesWithPriorityLevel(PlanningSolution solution) {
+		SolutionEvaluator evaluator = SolutionEvaluator.getInstance();
+		solution.setObjective(INDEX_HIGH_PRIORITY_OBJECTIVE, evaluator.getObjectivePerPriorityLevel(solution,0));
+		solution.setObjective(INDEX_LOW_PRIORITY_OBJECTIVE, evaluator.getObjectivePerPriorityLevel(solution, 1));
+	}
+
+	private void setObjectivesWithEqualWeight(PlanningSolution solution) {
+		SolutionEvaluator evaluator = SolutionEvaluator.getInstance();
+		solution.setObjective(INDEX_COMPLETION_OBJECTIVE, evaluator.completionObjective(solution));
+		solution.setObjective(INDEX_DISTRIBUTION_OBJECTIVE, evaluator.distributionObjective(solution));
+		solution.setObjective(INDEX_END_DATE_OBJECTIVE, evaluator.endDateObjective(solution));
+		solution.setObjective(INDEX_PRIORITY_OBJECTIVE, evaluator.priorityObjective(solution));
+		solution.setObjective(INDEX_SIMILARITY_OBJECTIVE, evaluator.similarityObjective(solution));
 	}
 
 	private void computeHours(PlanningSolution solution) {

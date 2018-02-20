@@ -15,6 +15,7 @@ import java.util.Comparator;
  * @author Vavou
  *
  */
+@Deprecated
 public class PlanningSolutionDominanceComparator implements Comparator<PlanningSolution> {
 
 	/* --- Attributes --- */
