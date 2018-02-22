@@ -57,7 +57,11 @@ public class Employee {
 		this.weekAvailability = weekAvailability;
 		this.skills = skills == null ? new ArrayList<Skill>() : skills;
 	}
-	
+
+	public Employee(String name, List<Skill> skills) {
+		this.name = name;
+		this.skills = skills == null ? new ArrayList<Skill>() : skills;
+	}
 
 
 	/* --- OTHER --- */

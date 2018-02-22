@@ -25,17 +25,19 @@ public class PlannedFeature {
 	 * The begin hour of the planned feature
 	 */
 	private double beginHour;
+	private int beginSlotId;
+	
+	/**
+	 * The end hour of the planned feature
+	 */
+	private double endHour;
+	private int endSlotId;
 
 	/**
 	 * The employee who will do the feature
 	 */
 	@SerializedName("resource")
 	private Employee employee;
-	
-	/**
-	 * The end hour of the planned feature
-	 */
-	private double endHour;
 	
 	/**
 	 * The feature to do
@@ -64,21 +66,27 @@ public class PlannedFeature {
 	}
 
 	@ApiModelProperty(value = "")
-	public Employee getEmployee() {
-		return employee;
-	}
-
-	public void setEmployee(Employee employee) {
-		this.employee = employee;
-	}
-
-	@ApiModelProperty(value = "")
 	public double getEndHour() {
 		return endHour;
 	}
 
 	public void setEndHour(double endHour) {
 		this.endHour = endHour;
+	}
+
+	public int getBeginSlotId() { return beginSlotId; }
+	public void setBeginSlotId(int beginSlotId) { this.beginSlotId = beginSlotId; }
+
+	public int getEndSlotId() { return endSlotId; }
+	public void setEndSlotId(int endSlotId) { this.endSlotId = endSlotId; }
+
+	@ApiModelProperty(value = "")
+	public Employee getEmployee() {
+		return employee;
+	}
+
+	public void setEmployee(Employee employee) {
+		this.employee = employee;
 	}
 
 	@ApiModelProperty(value = "")
@@ -103,7 +111,7 @@ public class PlannedFeature {
 	public PlannedFeature(Feature feature, Employee employee) {
 		this.feature = feature;
 		this.employee = employee;
-		beginHour = 0.0;
+		//beginHour = 0.0;
 	}
 	
 	/**
@@ -112,9 +120,9 @@ public class PlannedFeature {
 	 */
 	public PlannedFeature(PlannedFeature origin) {
 		this.employee = origin.getEmployee();
-		this.beginHour = origin.getBeginHour();
 		this.feature = origin.getFeature();
-		this.endHour = origin.getEndHour();
+		/*this.beginHour = origin.getBeginHour();
+		this.endHour = origin.getEndHour();*/
 	}
 	
 	/* --- Methods --- */
@@ -130,19 +138,19 @@ public class PlannedFeature {
 		PlannedFeature other = (PlannedFeature) obj;
 
 		return other.getFeature().equals(this.getFeature()) &&
-				other.getEmployee().equals(this.getEmployee()) &&
-				other.getBeginHour() == this.getBeginHour() && 
-				other.getEndHour() == this.getEndHour();
+				other.getEmployee().equals(this.getEmployee());
+				//other.getBeginHour() == this.getBeginHour() &&
+				//other.getEndHour() == this.getEndHour();
 	}
 	
-	@Override
+	/*@Override
 	public int hashCode() {
 		return new Double(getBeginHour()).intValue();
-	}
+	}*/
 	
 	@Override
 	public String toString() {
 		return String.valueOf(getFeature()) + " done by " + getEmployee() +
-				" from " + getBeginHour() + " to " + getEndHour();
+				" from " + getBeginSlotId() + " to " + getEndSlotId();
 	}
 }
