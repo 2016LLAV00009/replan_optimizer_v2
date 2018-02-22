@@ -138,13 +138,18 @@ private static final Logger logger = LoggerFactory.getLogger(ValidatePlanningSol
 
         NextReleaseProblem problem = new NextReleaseProblem(features, employees, 4, 40.0);
         System.out.println(problem.toString());
-        for (int i = 0; i < 1; ++i) {
+        long time = 0;
+        for (int i = 0; i < 10; ++i) {
+            long s = System.currentTimeMillis();
             List<PlanningSolution> solutions = solver.executeNRPlist(problem);
+            time += System.currentTimeMillis() - s;
 
             for (PlanningSolution solution : solutions)
                 System.out.println(solution.toString());
 
         }
+
+        System.out.println("Execution time: " + time/10 + " ms");
     }
 	
 	private void solutionToDataFile(PlanningSolution solution) {

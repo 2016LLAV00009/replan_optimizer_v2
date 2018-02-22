@@ -121,7 +121,7 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 	public NextReleaseProblem() {
 		setName("Next Release Problem");
 		setNumberOfVariables(1);
-		setNumberOfObjectives(5);
+		setNumberOfObjectives(1);
 		features = new ArrayList<>();
 		numberOfViolatedConstraints = new NumberOfViolatedConstraints<>();
 		overallConstraintViolation = new OverallConstraintViolation<>();
@@ -234,9 +234,9 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 		solution.setEndDate(endHour);
 
 		/* Objectives and quality evaluation */
-		//setSingleObjective(solution);
+		setSingleObjective(solution);
 		//setObjectivesWithPriorityLevel(solution);
-		setObjectivesWithEqualWeight(solution);
+		//setObjectivesWithEqualWeight(solution);
 
 		//solution.setObjective(INDEX_PRIORITY_OBJECTIVE, 1.0 - evaluator.completionObjective(solution));
         //solution.setObjective(INDEX_END_DATE_OBJECTIVE, 1.0 - evaluator.endDateObjective(solution));
