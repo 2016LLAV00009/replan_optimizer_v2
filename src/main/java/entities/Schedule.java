@@ -96,14 +96,14 @@ public class Schedule {
             }
             else {
                 if (remainingHours > 0) {
-                    double hour = Math.min(daySlot.getBeginHour() + remainingHours, daySlot.getEndHour());
+                    double hour = Math.min(remainingHours, daySlot.getDuration());
                     DaySlot thisDaySlot = new DaySlot(++currentSlotId, daySlot.getWeek(), daySlot.getDayOfWeek(),
                             daySlot.getBeginHour(), daySlot.getBeginHour() + hour, SlotStatus.Used);
                     thisAgenda.put(currentSlotId, thisDaySlot);
-                    remainingHours -= (hour - daySlot.getBeginHour());
-                    if (hour < daySlot.getEndHour()) {
+                    remainingHours -= hour;
+                    if (daySlot.getBeginHour() + hour < daySlot.getEndHour()) {
                         DaySlot afterDaySlot = new DaySlot(++currentSlotId, daySlot.getWeek(), daySlot.getDayOfWeek(),
-                                hour, daySlot.getEndHour(), SlotStatus.Free);
+                                daySlot.getBeginHour() + hour, daySlot.getEndHour(), SlotStatus.Free);
                         //If feature is also finished the same day
                         laterAgenda.put(currentSlotId, afterDaySlot);
                     }
@@ -117,9 +117,9 @@ public class Schedule {
         int k = agenda.indexOf(slotAgenda);
         agenda.remove(k);
         //Add new 3 slotLists in order: after, this, before
-        agenda.add(k, new SlotList(laterAgenda));
-        agenda.add(k, new SlotList(thisAgenda));
-        agenda.add(k, new SlotList(previousAgenda));
+        if (laterAgenda.size() > 0) agenda.add(k, new SlotList(laterAgenda));
+        if (thisAgenda.size() > 0) agenda.add(k, new SlotList(thisAgenda));
+        if (previousAgenda.size() > 0)  agenda.add(k, new SlotList(previousAgenda));
 
     }
 

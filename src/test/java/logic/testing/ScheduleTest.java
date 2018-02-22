@@ -38,10 +38,18 @@ public class ScheduleTest {
 
         HashMap<Employee, List<DaySlot>> agenda = new HashMap<>();
         agenda.put(e1, Arrays.asList(day8, day2, day1, day4, day9, day6, day7, day3, day5));
-        agenda.put(e2, Arrays.asList(day18, day12, day11, day14, day19, day16, day17, day13, day15));
+        //agenda.put(e2, Arrays.asList(day18, day12, day11, day14, day19, day16, day17, day13, day15));
         Schedule s = new Schedule(agenda);
 
         System.out.println(s.toString());
+
+        Feature f1 = new Feature("F001",PriorityLevel.HIGH, 15.0, new ArrayList<>(), new ArrayList<>());
+        s.scheduleFeature(new PlannedFeature(f1, e1), null);
+
+
+        System.out.println("*****AFTER SCHEDULING*****");
+        System.out.println(s.toString());
+
 
     }
 
