@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+@Deprecated
 public class Slot {
 	
 	private HashMap<Integer, WeekSlot> weekSlots;

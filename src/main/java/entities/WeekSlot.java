@@ -1,5 +1,6 @@
 package entities;
 
+@Deprecated
 public class WeekSlot {
 	
 	private double beginHour;

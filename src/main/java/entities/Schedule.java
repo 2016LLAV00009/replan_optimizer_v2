@@ -5,19 +5,20 @@ import java.util.*;
 public class Schedule {
 
     HashMap<Employee, List<SlotList>> employeesCalendar;
-    int currentSlotId;
+    HashMap<Employee, Integer> currentSlotIds;
 
     public Schedule(HashMap<Employee, List<DaySlot>> agenda) {
         employeesCalendar = new HashMap<>();
-        currentSlotId = 0;
+        currentSlotIds = new HashMap<>();
         for (Employee e : agenda.keySet()) {
-            employeesCalendar.put(e, createSlotAgenda(agenda.get(e)));
+            int currentSlotId = createSlotAgenda(e, agenda.get(e));
+            currentSlotIds.put(e, currentSlotId);
         }
     }
 
-    private List<SlotList> createSlotAgenda(List<DaySlot> agenda) {
+    private int createSlotAgenda(Employee e, List<DaySlot> agenda) {
         Collections.sort(agenda);
-
+        int currentSlotId = 0;
         List<SlotList> slotAgenda = new ArrayList<>();
         int i = 0;
         //While there are agenda slots to initialize
@@ -36,14 +37,28 @@ public class Schedule {
             }
             slotAgenda.add(new SlotList(daySlotHashMap));
         }
-        return slotAgenda;
+        employeesCalendar.put(e, slotAgenda);
+        return currentSlotId;
     }
 
-    public boolean scheduleFeature(PlannedFeature pf, PlannedFeature lastPreviousPlannedFeature) {
+    public boolean scheduleFeature(PlannedFeature pf, List<PlannedFeature> previousFeatures) {
+        return scheduleFeature(pf, getLatestPlannedFeature(previousFeatures));
+    }
 
-        DaySlot lastPreviousFeatureEndSlot = null;
-        if (lastPreviousPlannedFeature != null)
-            lastPreviousFeatureEndSlot = getLastPreviousFeatureEndSlot(lastPreviousPlannedFeature);
+    private DaySlot getLatestPlannedFeature(List<PlannedFeature> previousFeatures) {
+        if (previousFeatures == null || previousFeatures.isEmpty())
+            return null;
+        DaySlot last = getPlannedFeatureEndSlot(previousFeatures.get(0));
+        for (int i = 1; i < previousFeatures.size(); ++i) {
+            DaySlot current = getPlannedFeatureEndSlot(previousFeatures.get(i));
+            if (last.compareTo(current) < 0) {
+                last = current;
+            }
+        }
+        return last;
+    }
+
+    private boolean scheduleFeature(PlannedFeature pf, DaySlot lastPreviousFeatureEndSlot) {
 
         SlotList slotAgenda = getFirstAvailableSlot(pf, lastPreviousFeatureEndSlot);
 
@@ -55,6 +70,7 @@ public class Schedule {
             DaySlot beginSlot = slotAgenda.getDaySlot(slotAgenda.getBeginSlotId());
             lastPreviousFeatureEndSlot = new DaySlot(-1, beginSlot.getWeek(), beginSlot.getDayOfWeek() - 1, beginSlot.getBeginHour(), beginSlot.getBeginHour(), SlotStatus.Free);
         }
+
         updateAgenda(pf, slotAgenda, lastPreviousFeatureEndSlot);
 
         return true;
@@ -65,10 +81,12 @@ public class Schedule {
         LinkedHashMap<Integer, DaySlot> thisAgenda = new LinkedHashMap<>();
         LinkedHashMap<Integer, DaySlot> laterAgenda = new LinkedHashMap<>();
         double remainingHours = pf.getFeature().getDuration();
+        int currentSlotId = currentSlotIds.get(pf.getEmployee());
         for (DaySlot daySlot: slotAgenda.getDaySlots().values()) {
             int cmp = daySlot.compareByDay(lastPreviousFeatureEndSlot);
             if (cmp < 0) {
                 //If DaySlot is previous to end of previous feature
+                daySlot.setStatus(SlotStatus.Free);
                 previousAgenda.put(daySlot.getId(), daySlot);
             }
             else if (cmp == 0) {
@@ -97,15 +115,19 @@ public class Schedule {
             else {
                 if (remainingHours > 0) {
                     double hour = Math.min(remainingHours, daySlot.getDuration());
-                    DaySlot thisDaySlot = new DaySlot(++currentSlotId, daySlot.getWeek(), daySlot.getDayOfWeek(),
-                            daySlot.getBeginHour(), daySlot.getBeginHour() + hour, SlotStatus.Used);
-                    thisAgenda.put(currentSlotId, thisDaySlot);
                     remainingHours -= hour;
                     if (daySlot.getBeginHour() + hour < daySlot.getEndHour()) {
+                        DaySlot thisDaySlot = new DaySlot(++currentSlotId, daySlot.getWeek(), daySlot.getDayOfWeek(),
+                                daySlot.getBeginHour(), daySlot.getBeginHour() + hour, SlotStatus.Used);
+                        thisAgenda.put(currentSlotId, thisDaySlot);
+
                         DaySlot afterDaySlot = new DaySlot(++currentSlotId, daySlot.getWeek(), daySlot.getDayOfWeek(),
                                 daySlot.getBeginHour() + hour, daySlot.getEndHour(), SlotStatus.Free);
                         //If feature is also finished the same day
                         laterAgenda.put(currentSlotId, afterDaySlot);
+                    } else {
+                        daySlot.setStatus(SlotStatus.Used);
+                        thisAgenda.put(daySlot.getId(), daySlot);
                     }
                 } else {
                     laterAgenda.put(daySlot.getId(), daySlot);
@@ -120,7 +142,13 @@ public class Schedule {
         if (laterAgenda.size() > 0) agenda.add(k, new SlotList(laterAgenda));
         if (thisAgenda.size() > 0) agenda.add(k, new SlotList(thisAgenda));
         if (previousAgenda.size() > 0)  agenda.add(k, new SlotList(previousAgenda));
-
+        currentSlotIds.put(pf.getEmployee(), currentSlotId);
+        //pf.setSlotIds((List<Integer>) thisAgenda.keySet());
+        List<Integer> daySlotIds = new ArrayList<>();
+        for (Integer i : thisAgenda.keySet()) {
+            daySlotIds.add(i);
+        }
+        pf.setSlotIds(daySlotIds);
     }
 
     private SlotList getFirstAvailableSlot(PlannedFeature pf, DaySlot lastPreviousFeatureEndSlot) {
@@ -135,7 +163,7 @@ public class Schedule {
         return null;
     }
 
-    private DaySlot getLastPreviousFeatureEndSlot(PlannedFeature pf) {
+    private DaySlot getPlannedFeatureEndSlot(PlannedFeature pf) {
         for (SlotList slotList : employeesCalendar.get(pf.getEmployee())) {
             DaySlot daySlot = slotList.getDaySlot(pf.getEndSlotId());
             if (daySlot != null) return daySlot;

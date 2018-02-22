@@ -8,6 +8,7 @@ import java.util.List;
  * @author Vavou
  *
  */
+@Deprecated
 public class WeekSchedule {
 
 	// The begining hour of the employee in the week

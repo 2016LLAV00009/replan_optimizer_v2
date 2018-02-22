@@ -3,6 +3,10 @@ package entities;
 import com.google.gson.annotations.SerializedName;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 /**
  * Describes a feature in a planning
  * Contains 
@@ -25,13 +29,11 @@ public class PlannedFeature {
 	 * The begin hour of the planned feature
 	 */
 	private double beginHour;
-	private int beginSlotId;
-	
+
 	/**
 	 * The end hour of the planned feature
 	 */
 	private double endHour;
-	private int endSlotId;
 
 	/**
 	 * The employee who will do the feature
@@ -43,6 +45,8 @@ public class PlannedFeature {
 	 * The feature to do
 	 */
 	private Feature feature;
+
+	private List<Integer> slotIds;
 
 	
 	/* --- Getters and setters --- */
@@ -74,11 +78,13 @@ public class PlannedFeature {
 		this.endHour = endHour;
 	}
 
-	public int getBeginSlotId() { return beginSlotId; }
-	public void setBeginSlotId(int beginSlotId) { this.beginSlotId = beginSlotId; }
+	public int getBeginSlotId() { return slotIds.get(0); }
 
-	public int getEndSlotId() { return endSlotId; }
-	public void setEndSlotId(int endSlotId) { this.endSlotId = endSlotId; }
+	public int getEndSlotId() { return slotIds.get(slotIds.size()-1); }
+
+	public void setSlotIds(List<Integer> slotIds) {
+		this.slotIds = slotIds;
+	}
 
 	@ApiModelProperty(value = "")
 	public Employee getEmployee() {
@@ -111,6 +117,7 @@ public class PlannedFeature {
 	public PlannedFeature(Feature feature, Employee employee) {
 		this.feature = feature;
 		this.employee = employee;
+		this.slotIds = new ArrayList<>();
 		//beginHour = 0.0;
 	}
 	
@@ -153,4 +160,5 @@ public class PlannedFeature {
 		return String.valueOf(getFeature()) + " done by " + getEmployee() +
 				" from " + getBeginSlotId() + " to " + getEndSlotId();
 	}
+
 }
