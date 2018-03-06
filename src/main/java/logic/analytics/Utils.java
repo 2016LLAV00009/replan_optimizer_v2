@@ -81,24 +81,10 @@ public class Utils {
         return pf != null ? pf.getEndHour() : -1.0;
     }
 
-    public double startHour(Employee e) {
-        NewSchedule s = solution.getEmployeesPlanning().get(e);
-        if (s != null)
-            return s.getBeginHour();
-
-        return -1.0;
-    }
-
-    public double endHour(Employee e) {
-        NewSchedule s = solution.getEmployeesPlanning().get(e);
-        if (s != null)
-        	return s.getEndHour();
-        return -1.0;
-    }
 
     // Assumes that the employee has enough time to do the feature and tells whether it would be possible to plan
     // the feature while respecting all its precedences, according to solution's schedule.
-    public boolean couldRespectPrecedences(Employee e, Feature f) {
+   /* public boolean couldRespectPrecedences(Employee e, Feature f) {
         // Get the end hour of the nearest precedence
         double endHour = 0.0;
         for (Feature dep : f.getPreviousFeatures()) {
@@ -115,6 +101,6 @@ public class Utils {
     public boolean hadEnoughTime(Employee e, Feature f) {
         NewSchedule s = solution.getEmployeesPlanning().get(e);
         return s != null && s.getTotalHoursLeft() >= f.getDuration();
-    }
+    }*/
 }
 

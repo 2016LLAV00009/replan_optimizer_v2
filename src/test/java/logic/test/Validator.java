@@ -109,32 +109,18 @@ public class Validator {
     }
 
     public void validateNoOverlappedJobs(PlanningSolution solution) {
-        Map<Employee, NewSchedule> schedule = solution.getEmployeesPlanning();
-        for (Map.Entry<Employee, NewSchedule> entry : schedule.entrySet()) {
-        	List<PlannedFeature> features = entry.getValue().getPlannedFeatures();
-        	for (int i = 0; i < features.size(); ++i) {
-        		for (int j = i+1; j < features.size(); ++j) {
-        			if (!features.get(i).equals(features.get(j))) Assert.assertTrue(String.format(OVERLAPPING_FAIL_MESSAGE, features.get(i), features.get(j)),
-        					features.get(i).getEndHour() <= features.get(j).getBeginHour() ||
-        					features.get(i).getBeginHour() >= features.get(j).getEndHour());
-        		}
-        	}
-            /*for (WeekSchedule week : entry.getValue()) {
-                double endHour = 0.0;
-                List<PlannedFeature> employeeJobs = week.getPlannedFeatures();
-                PlannedFeature previous = employeeJobs.isEmpty() ? null : employeeJobs.get(0);
-
-                for (PlannedFeature pf : employeeJobs) {
-                    if (pf != previous) {
-                        Assert.assertTrue(
-                                String.format(OVERLAPPING_FAIL_MESSAGE, pf, previous),
-                                pf.getBeginHour() >= endHour
-                        );
+        for (Employee e : solution.getSchedule().getEmployeesCalendar().keySet()) {
+            List<SlotList> slotLists = solution.getSchedule().getEmployeesCalendar().get(e);
+            for (SlotList slotList1 : slotLists) {
+                for (SlotList slotList2 : slotLists) {
+                    if (slotList1.getBeginSlotId() != slotList2.getBeginSlotId()) {
+                            Assert.assertTrue(
+                                    slotList1.getDaySlot(slotList1.getBeginSlotId()).compareTo(slotList2.getDaySlot(slotList2.getEndSlotId())) >= 0 ||
+                                            slotList2.getDaySlot(slotList2.getBeginSlotId()).compareTo(slotList1.getDaySlot(slotList1.getEndSlotId())) >= 0
+                            );
                     }
-                    endHour = pf.getEndHour();
-                    previous = pf;
                 }
-            }*/
+            }
         }
     }
 }

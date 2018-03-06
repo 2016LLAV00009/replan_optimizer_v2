@@ -36,10 +36,9 @@ public class ReplanApiController implements ReplanApi {
 
             // Convert to internal model
             NextReleaseProblem problem =
-                    new NextReleaseProblem(p.getFeatures(), p.getResources(), p.getNbWeeks(), p.getHoursPerWeek());
-            problem.setPreviousSolution(p.getPreviousSolution());
-            problem.setReplanHour(p.getReplanHour());
-
+                    new NextReleaseProblem(p.getFeatures(), p.getResources());
+            //problem.setPreviousSolution(p.getPreviousSolution());
+            //problem.setReplanHour(p.getReplanHour());
 
             // Execute
             SolverNRP solver = new SolverNRP();
@@ -48,7 +47,6 @@ public class ReplanApiController implements ReplanApi {
             problem.setEvaluationParameters(problem.getEvaluationParameters());
             
             PlanningSolution solution = solver.executeNRP(problem);
-
             ApiPlanningSolution apiSolution = new ApiPlanningSolution(solution);
 
             return new ResponseEntity<String>(gson.toJson(apiSolution), HttpStatus.OK);

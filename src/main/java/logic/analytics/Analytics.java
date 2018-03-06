@@ -60,8 +60,8 @@ public class Analytics {
 
         initializeInfo();
 
-        evaluateFeatures();
-        evaluateQuality();
+        //evaluateFeatures();
+        //evaluateQuality();
     }
     
     public List<String> getInfo() {
@@ -77,7 +77,7 @@ public class Analytics {
 
 
     /* --- PRIVATE --- */
-    private void evaluateFeatures() {
+    /*private void evaluateFeatures() {
         String depMessage = "Feature '%s' couldn't be planned because dependencie(s) [%s] haven't been planned";
         String skillMessage = "There isn't any employee with the required skills to do Feature '%s'";
         String doableMessage = "Feature '%s' could have been done by employee(s) [%s], but wasn't planned";
@@ -120,7 +120,7 @@ public class Analytics {
 
         if (totalEmployeesAvailableHours - featureHours >= 240.0)
             info.add(String.format(message, totalEmployeesAvailableHours, featureHours));
-    }
+    }*/
 
     @Override
     public String toString() {

@@ -92,9 +92,9 @@ public class PlanningSolutionDominanceComparator implements Comparator<PlanningS
 
 	private int dominanceTest(PlanningSolution solution1, PlanningSolution solution2) {
 		SolutionQuality quality = new SolutionQuality();
-		if (quality.getAttribute(solution1) > quality.getAttribute(solution2))
+		if (quality.getAttribute(solution1) < quality.getAttribute(solution2))
 			return -1;
-		else if (quality.getAttribute(solution1) < quality.getAttribute(solution2))
+		else if (quality.getAttribute(solution1) > quality.getAttribute(solution2))
 			return 1;
 		else
 			return 0;

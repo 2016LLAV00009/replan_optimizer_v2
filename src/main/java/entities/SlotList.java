@@ -48,7 +48,7 @@ public class SlotList {
         DaySlot beginDaySlot = daySlots.get(beginSlotId);
         //If any previous feature is planned after this slot, feature can't be planned
         if (lastPreviousFeatureEndSlot != null &&
-                lastPreviousFeatureEndSlot.compareTo(endDaySlot) >= 0)
+                lastPreviousFeatureEndSlot.compareTo(beginDaySlot) <= 0)
             return false;
         //Otherwise, we check if feature duration fits in this slot duration
         else {
@@ -70,6 +70,16 @@ public class SlotList {
             }
             return freeTime >= feature.getDuration();
         }
+    }
+
+    @Override
+    public String toString() {
+        DaySlot beginSlot = daySlots.get(beginSlotId);
+        DaySlot endSlot = daySlots.get(endSlotId);
+        return "\tFeature " + beginSlot.getFeature() + " is done from [w: "
+                + beginSlot.getWeek() + ", d: " + beginSlot.getDayOfWeek() + ", h: " + beginSlot.getBeginHour()
+                + "] to [w: " + endSlot.getWeek() + ", d: " + endSlot.getDayOfWeek() + ", h: "
+                + endSlot.getEndHour() + "]\n";
     }
 
 }

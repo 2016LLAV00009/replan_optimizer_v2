@@ -29,19 +29,13 @@ public class ApiNextReleaseProblem {
 
     private static final String DATASET_PATH = "src/test/datasets";
 
-    private ApiPlanningSolution previousSolution = null;
-
-    private int nbWeeks;
-
-    private double hoursPerWeek;
-
     private List<Feature> features = new ArrayList<>();
 
     private List<Employee> resources = new ArrayList<>();
 
-    private AlgorithmParameters algorithmParameters = null;
-    
     private double replanHour;
+
+    private AlgorithmParameters algorithmParameters = null;
 
     private EvaluationParameters evaluationParameters = null;
 
@@ -53,19 +47,21 @@ public class ApiNextReleaseProblem {
         resources = new ArrayList<>();
     }
 
-    public ApiNextReleaseProblem(Integer nbWeeks, Double hoursPerWeek, List<Feature> features, List<Employee> resources) {
-        this.nbWeeks = nbWeeks;
-        this.hoursPerWeek = hoursPerWeek;
+    /*
+    Standard constructor
+     */
+    public ApiNextReleaseProblem(List<Feature> features, List<Employee> resources) {
         this.features = features;
         this.resources = resources;
     }
 
+    /*
+    Replan constructor
+     */
     public ApiNextReleaseProblem(
-            Integer nbWeeks, Double hoursPerWeek, List<Feature> features, List<Employee> resources,
-            ApiPlanningSolution previousSolution, double replanHour)
+           List<Feature> features, List<Employee> resources, double replanHour)
     {
-        this(nbWeeks, hoursPerWeek, features, resources);
-        this.previousSolution = previousSolution;
+        this(features, resources);
         this.replanHour = replanHour;
     }
 
@@ -94,44 +90,20 @@ public class ApiNextReleaseProblem {
 
     /* --- GETTERS / SETTERS --- */
 
-
-    @ApiModelProperty(value = "")
-    public ApiPlanningSolution getPreviousSolution() {
-        return previousSolution;
-    }
-    public void setPreviousSolution(ApiPlanningSolution plan) {
-        previousSolution = plan;
-    }
-
-    @ApiModelProperty(value = "")
-    public int getNbWeeks() { return nbWeeks; }
-
-    public void setNbWeeks(int nbWeeks) { this.nbWeeks = nbWeeks; }
-
-    @ApiModelProperty(value = "")
-    public double getHoursPerWeek() { return hoursPerWeek; }
-
-    public void setHoursPerWeek(double hoursPerWeek) { this.hoursPerWeek = hoursPerWeek; }
-
     @ApiModelProperty(value = "")
     public List<Feature> getFeatures() { return features; }
-
     public void setFeatures(List<Feature> features) { this.features = features; }
-
 
     @ApiModelProperty(value = "")
     public List<Employee> getResources() { return resources; }
-
     public void setResources(List<Employee> resources) { this.resources = resources; }
 
     @ApiModelProperty(value="")
     public AlgorithmParameters getAlgorithmParameters() { return algorithmParameters; }
-
     public void setAlgorithmParameters(AlgorithmParameters algorithmParameters) { this.algorithmParameters = algorithmParameters; }
 
     @ApiModelProperty(value="")
     public double getReplanHour() { return replanHour; }
-    
     public void setReplanHour(double replanHour) { this.replanHour = replanHour; }
     
     @ApiModelProperty(value="")
@@ -141,7 +113,6 @@ public class ApiNextReleaseProblem {
 	public void setEvaluationParameters(EvaluationParameters evaluationParameters) {
 		this.evaluationParameters = evaluationParameters;
 	}
-
 
 
     /* ----------------- */
@@ -155,15 +126,13 @@ public class ApiNextReleaseProblem {
             return false;
         }
         ApiNextReleaseProblem nextReleaseProblem = (ApiNextReleaseProblem) o;
-        return Objects.equals(this.nbWeeks, nextReleaseProblem.nbWeeks) &&
-                Objects.equals(this.hoursPerWeek, nextReleaseProblem.hoursPerWeek) &&
-                Objects.equals(this.features, nextReleaseProblem.features) &&
+        return Objects.equals(this.features, nextReleaseProblem.features) &&
                 Objects.equals(this.resources, nextReleaseProblem.resources);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(nbWeeks, hoursPerWeek, features, resources);
+        return Objects.hash(features, resources);
     }
 
     @Override
@@ -171,8 +140,8 @@ public class ApiNextReleaseProblem {
         String f = features.stream().map(Feature::getName).collect(Collectors.joining(", "));
         String r = resources.stream().map(Employee::getName).collect(Collectors.joining(", "));
         return String.format(
-                Locale.ENGLISH, "nbWeeks: %d, hoursPerWeek: %.2f, features: %s, resources: %s",
-                nbWeeks, hoursPerWeek, f, r);
+                Locale.ENGLISH, "features: %s, resources: %s",
+                f, r);
     }
 
     /**

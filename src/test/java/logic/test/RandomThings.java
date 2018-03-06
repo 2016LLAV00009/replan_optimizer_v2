@@ -83,13 +83,16 @@ public class RandomThings {
 	}
 
     public Employee employee() {
-        return new Employee(String.format("E%03d", ++employeeID), 40.0, new ArrayList<>());
+        Employee e = new Employee(String.format("E%03d", ++employeeID), new ArrayList<>());
+        e.setCalendar(getAgenda(4  , 8.0));
+        return e;
     }
 
     public List<Employee> employeeList(int nbElems) {
         List<Employee> employees = new ArrayList<>();
         while (employees.size() < nbElems) {
             Employee e = employee();
+            e.setCalendar(getAgenda(4,8.0));
             if (!employees.contains(e))
                 employees.add(e);
         }
@@ -194,7 +197,7 @@ public class RandomThings {
 
         validator.validateNoUnassignedSkills(skills, employees);
 
-        return new NextReleaseProblem(features, employees, nWeeks, hoursPerWeek);
+        return new NextReleaseProblem(features, employees);
     }
 
 
@@ -244,6 +247,18 @@ public class RandomThings {
         }
 
         Assert.assertTrue(assignedSkills.size() == skills.size());
+    }
+
+    public List<DaySlot> getAgenda(int nbWeeks, double hoursPerDay) {
+        List<DaySlot> agenda = new ArrayList<>();
+        for (int i = 0; i < nbWeeks*5; ++i) {
+            int week = Math.floorDiv(i, 5) + 1;
+            int dayOfWeek = i%5 + 1;
+            agenda.add(new DaySlot(i+1, week,
+                    dayOfWeek, 8.0,
+                    8.0 + hoursPerDay, SlotStatus.Free));
+        }
+        return agenda;
     }
 
 

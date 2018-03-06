@@ -117,8 +117,8 @@ public class Feature {
 		for (Skill s : getRequiredSkills())
 			requiredSkillsNames.add(s.getName());
 
-		return String.format("%s. Required skills: [%s]. Dependences: [%s].",
-				getName(), String.join(", ", requiredSkillsNames), String.join(", ", dependencesNames));
+		return String.format("%s [%s h]. Required skills: [%s]. Dependences: [%s].",
+				getName(), getDuration(), String.join(", ", requiredSkillsNames), String.join(", ", dependencesNames));
 	}
 	
 	@Override

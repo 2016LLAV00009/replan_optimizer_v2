@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 
+import entities.DaySlot;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -15,8 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import entities.Employee;
 import entities.Feature;
-import entities.NewSchedule;
-import entities.PlannedFeature;
 import entities.Skill;
 import logic.NextReleaseProblem;
 import logic.PlanningSolution;
@@ -67,7 +66,7 @@ private static final Logger logger = LoggerFactory.getLogger(ValidatePlanningSol
         employees.get(3).getSkills().add(skills.get(4));
         employees.get(3).getSkills().add(skills.get(3));
 
-        employees.get(3).setWeekAvailability(1.0);
+       // employees.get(3).setWeekAvailability(1.0);
 
         // dependencies
         //features.get(3).getPreviousFeatures().add(features.get(0));
@@ -136,16 +135,23 @@ private static final Logger logger = LoggerFactory.getLogger(ValidatePlanningSol
 
         features.get(19).getRequiredSkills().add(new Skill("No one has this skill"));
 
-        NextReleaseProblem problem = new NextReleaseProblem(features, employees, 4, 40.0);
+        List<DaySlot> agenda = random.getAgenda(4, 8.0);
+        for (Employee e : employees) e.setCalendar(agenda);
+
+        NextReleaseProblem problem = new NextReleaseProblem(features, employees);
         System.out.println(problem.toString());
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < 1; ++i) {
             PlanningSolution solution = solver.executeNRP(problem);
             System.out.println(solution.toString());
             validator.validateAll(solution);
-
-            Analytics analytics = new Analytics(solution);
-
-            solutionToDataFile(solution);
+            System.out.println("*****Replanning******");
+            NextReleaseProblem nextReleaseProblem =
+                    new NextReleaseProblem(features, solution.getEmployees(), new DaySlot(0,2,1,8.0,0, null));
+            PlanningSolution replan = solver.executeNRP(nextReleaseProblem);
+            System.out.println(replan.toString());
+           // System.out.println(replan.getSchedule().toString());
+            /*Analytics analytics = new Analytics(solution);
+            solutionToDataFile(solution);*/
         }
     }
 	

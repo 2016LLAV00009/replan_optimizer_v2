@@ -29,17 +29,12 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
 	
     private CopyOnWriteArrayList<PlannedFeature> plannedFeatures; 	            // Included features
 	private CopyOnWriteArrayList<Feature> undoneFeatures; 						// Not included features
-    private Map<Employee, NewSchedule> employeesPlanning; 			// The employees' Schedule
-	private double endDate;     								// The end hour of the solution
+	private Schedule schedule;
     private Analytics analytics = null;
+
+    private List<Employee> employees;
     
     /* --- GETTERS / SETTERS --- */
-	public double getEndDate() {
-		return endDate;
-	}
-	public void setEndDate(double endDate) {
-		this.endDate = endDate;
-	}
 
 	public int size() {
 		return plannedFeatures.size();
@@ -54,6 +49,13 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
 		return null;
 	}
 
+	public Schedule getSchedule() {
+		return this.schedule;
+	}
+	public void setSchedule(Schedule schedule) {
+		this.schedule = schedule;
+	}
+
 	public List<PlannedFeature> getEndPlannedFeaturesSubListCopy(int beginPosition) {
 		return new ArrayList<>(plannedFeatures.subList(beginPosition, plannedFeatures.size()));
 	}
@@ -62,17 +64,18 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
 		return undoneFeatures;
 	}
 
-	public Map<Employee, NewSchedule> getEmployeesPlanning() {
-		return employeesPlanning;
-	}
-	public void setEmployeesPlanning(Map<Employee, NewSchedule> employeesPlanning) {
-		this.employeesPlanning = employeesPlanning;
-	}
-
     public NextReleaseProblem getProblem() { return problem; }
 
     public Analytics getAnalytics() { return analytics; }
     public void setAnalytics(Analytics analytics) { this.analytics = analytics; }
+
+	public List<Employee> getEmployees() {
+		return employees;
+	}
+
+	public void setEmployees(List<Employee> employees) {
+		this.employees = employees;
+	}
 
 	/* --- CONSTRUCTORS --- */
 
@@ -80,46 +83,78 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
 	public PlanningSolution(NextReleaseProblem problem) {
 		super(problem);
 		this.problem = problem;
+		this.employees = problem.getEmployees();
 	    //numberOfViolatedConstraints = 0;
-	    initializePlannedFeatureVariables();
+		initializePlannedFeatureVariables();
 	    initializeObjectiveValues();
 	}
 
-    public PlanningSolution(NextReleaseProblem problem, boolean initializeOnCreate) {
+	public void initOldAndNewAgenda() {
+		HashMap<Employee, List<DaySlot>> agenda = new HashMap<>();
+		HashMap<Employee, List<DaySlot>> previous = new HashMap<>();
+		for (Employee e : employees) {
+			previous.put(e, e.copyCalendar());
+			agenda.put(e, e.copyCalendar());
+		}
+		setSchedule(new Schedule(agenda));
+		Schedule schedule = getSchedule();
+
+		HashMap<Employee, List<DaySlot>> newDaySlots = new HashMap<>();
+
+		HashMap<PlannedFeature, List<DaySlot>> listPfs = new HashMap<>();
+
+		//System.out.println(schedule.toString());
+		for (Employee e : schedule.getEmployeesCalendar().keySet()) {
+			//System.out.println("Let's check employee " + e);
+			List<SlotList> slotLists = schedule.getEmployeesCalendar().get(e);
+			for (SlotList slotList : slotLists) {
+				if (slotList.getSlotStatus().equals(SlotStatus.Used)) {
+					DaySlot endSlot = slotList.getDaySlot(slotList.getEndSlotId());
+					//If the slotList ends after the replan time, release it
+					//System.out.println(schedule.toString());
+					if (problem.getReplanTime().compareByDay(endSlot) < 0
+							|| problem.getReplanTime().compareByDay(endSlot) == 0 && problem.getReplanTime().getBeginHour() >= endSlot.getEndHour()) {
+						for (DaySlot daySlot : slotList.getDaySlots().values()) {
+							daySlot.setStatus(SlotStatus.Free);
+							daySlot.setFeatureId(null);
+						}
+					}
+					//If the slotList ends before the replan time, schedule feature
+					else {
+						Feature f = undoneFeatures.stream().filter(feature -> feature.getName().equals(endSlot.getFeature())).findFirst().get();
+						listPfs.put(new PlannedFeature(f, e), new ArrayList(slotList.getDaySlots().values()));
+					}
+				}
+			}
+			List<DaySlot> daySlots = new ArrayList<>();
+			for (SlotList slotList : slotLists) daySlots.addAll(slotList.getDaySlots().values());
+			newDaySlots.put(e, daySlots);
+		}
+
+		Schedule nSchedule = new Schedule(newDaySlots);
+		setSchedule(nSchedule);
+		problem.setPreviousSchedule(new Schedule(previous));
+
+		for (PlannedFeature pf : listPfs.keySet()) {
+			forceSchedule(pf, listPfs.get(pf));
+		}
+
+	}
+
+	private void forceSchedule(PlannedFeature pf, List<DaySlot> daySlots) {
+		getSchedule().forcedSchedule(pf, daySlots);
+		undoneFeatures.remove(pf.getFeature());
+		plannedFeatures.add(pf);
+	}
+
+	public PlanningSolution(NextReleaseProblem problem, boolean initializeOnCreate) {
         super(problem);
         INITIALIZE_ON_CREATE = initializeOnCreate;
+        this.employees = problem.getEmployees();
         //numberOfViolatedConstraints = 0;
         initializePlannedFeatureVariables();
         initializeObjectiveValues();
     }
-	
-    // constructor (with previous plan)
-	public PlanningSolution(NextReleaseProblem problem, List<PlannedFeature> plannedFeatures) {
-	    super(problem);
-	    undoneFeatures = new CopyOnWriteArrayList<>();
-		undoneFeatures.addAll(problem.getFeatures());
-
-		this.plannedFeatures = new CopyOnWriteArrayList<>();
-		
-		//Update features according to replan
-		for (PlannedFeature plannedFeature : plannedFeatures) {
-			//undoneFeatures.remove(plannedFeature.getFeature());
-			//if (plannedFeature.isFrozen()) this.plannedFeatures.add(plannedFeature);
-			//else scheduleAtTheEnd(plannedFeature.getFeature(), plannedFeature.getEmployee());
-			if (plannedFeature.isFrozen() || plannedFeature.getBeginHour() < problem.getReplanHour()) {
-				undoneFeatures.remove(plannedFeature.getFeature());
-				this.plannedFeatures.add(plannedFeature);
-			}
-		}
-		
-		int nbFeaturesToDo = undoneFeatures.size();
-		if (randomGenerator.nextDouble() > getProblem().getAlgorithmParameters().getRateOfNotRandomSolution())
-            initializePlannedFeaturesRandomly(nbFeaturesToDo);
-        else
-            initializePlannedFeaturesWithPrecedences(nbFeaturesToDo);
-		
-	    initializeObjectiveValues();
-	}
 
     // Copy constructor
 	public PlanningSolution(PlanningSolution origin) {
@@ -133,17 +168,11 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
 	    
 	    // Copy constraints and quality
 	    this.attributes.putAll(origin.attributes);
-	    
-	    employeesPlanning = new HashMap<>();
-	    for (Employee e : origin.employeesPlanning.keySet()) {
-	    	NewSchedule old = origin.employeesPlanning.get(e);
-			employeesPlanning.put(e, new NewSchedule(old));
-		}
+	    this.schedule = origin.schedule;
 	    
 	    for (int i = 0 ; i < origin.getNumberOfObjectives() ; i++)
 	    	this.setObjective(i, origin.getObjective(i));
 
-	    endDate = origin.getEndDate();
 	    undoneFeatures = new CopyOnWriteArrayList<>(origin.getUndoneFeatures());
 	}
 
@@ -198,8 +227,11 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
 		undoneFeatures = new CopyOnWriteArrayList<>();
 		undoneFeatures.addAll(problem.getFeatures());
 		plannedFeatures = new CopyOnWriteArrayList<>();
-		
+
+		initOldAndNewAgenda();
+
 		if (INITIALIZE_ON_CREATE) {
+			//System.out.println(undoneFeatures.size()+ "//" + plannedFeatures.size());
             if (randomGenerator.nextDouble() > getProblem().getAlgorithmParameters().getRateOfNotRandomSolution())
                 initializePlannedFeaturesRandomly(nbFeaturesToDo);
             else
@@ -208,14 +240,15 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
 		
 	}
 
-    public double computeCriticalPath() {
-    	double currentCriticalPath = 0.;
+	private double computeCriticalPath() {
+		double currentCriticalPath = 0.;
 		for (PlannedFeature pf : getPlannedFeatures()) {
 			double newPath = getPathDuration(pf.getFeature());
 			if (newPath > currentCriticalPath) currentCriticalPath = newPath;
 		}
 		return currentCriticalPath;
 	}
+
 	private double getPathDuration(Feature feature) {
 		if (feature.getPreviousFeatures().isEmpty())
 			return feature.getDuration();
@@ -228,6 +261,7 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
 			return maxPath + feature.getDuration();
 		}
 	}
+
 	// Initializes the planned features randomly
     private void initializePlannedFeaturesRandomly(int numFeaturesToPlan) {
         Feature featureToDo;
@@ -255,14 +289,6 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
 			scheduleAtTheEnd(featureToDo, skilledEmployees.get(randomGenerator.nextInt(0, skilledEmployees.size()-1)));
 			possibleFeatures = updatePossibleFeatures();
 			i++;
-		}
-	}
-	
-	// Reset the begin hours of all the planned feature to 0.0
-	public void resetHours() {
-		for (PlannedFeature plannedFeature : plannedFeatures) {
-			plannedFeature.setBeginHour(0.0);
-			plannedFeature.setEndHour(0.0);
 		}
 	}
 
@@ -294,11 +320,6 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
 		Employee newEmployee = skilledEmployees.get(randomGenerator.nextInt(0, skilledEmployees.size()-1));
 		schedule(insertionPosition, newFeature, newEmployee);
 	}
-	
-	// schedule the planned feature at a random position in the planning
-	public void scheduleRandomly(PlannedFeature plannedFeature) {
-		schedule(randomGenerator.nextInt(0, plannedFeatures.size()), plannedFeature.getFeature(), plannedFeature.getEmployee());
-	}
 
 	// schedule a feature : remove it from the planned features and add it to the undone ones
 	public void unschedule(PlannedFeature plannedFeature) {
@@ -325,7 +346,7 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
 			if (possible)
 				possibleFeatures.add(feature);
 		}
-		
+
 		return possibleFeatures;
 	}
 
@@ -368,11 +389,21 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
 		sb.append(String.format("%d/%d features planned", plannedFeatures.size(), 
 				plannedFeatures.size() + undoneFeatures.size()));
 		sb.append("\n");
-		if (employeesPlanning != null) {
+		/*if (employeesPlanning != null) {
 			for (Employee e : employeesPlanning.keySet()) {
-				sb.append("Employee " + e.getName() + " Schedule (availability: " + e.getWeekAvailability() + "h)\n");
+				sb.append("Employee " + e.getName() + " Schedule\n");
 				for (PlannedFeature pf : employeesPlanning.get(e).getPlannedFeatures()) {
 					sb.append("\tFeature " + pf.getFeature() + " from " + pf.getBeginHour() + " to " + pf.getEndHour() + " (" + pf.getFeature().getDuration() + "h)\n");
+				}
+			}
+		}*/
+		if (schedule != null) {
+			for (Employee e : schedule.getEmployeesCalendar().keySet()) {
+				sb.append("Employee " + e.getName() + " schedule\n");
+				for (SlotList slotList : schedule.getEmployeesCalendar().get(e)) {
+					if (slotList.getSlotStatus().equals(SlotStatus.Used)) {
+						sb.append(slotList.toString());
+					}
 				}
 			}
 		}
@@ -408,8 +439,7 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
         for (Employee e : resources) {
             sb.append("  d$resources[nrow(d$resources)+1,] <- c(")
                     .append(quote(e.getName())).append(", ") // id
-                    .append(quote(e.getName())).append(", ") // content
-                    .append(e.getWeekAvailability()).append(")").append(lineSeparator); // availability
+                    .append(quote(e.getName())).append(", "); // content
             for(Skill s : e.getSkills())
                 sb.append("  d$skillsGraphEdges[nrow(d$skillsGraphEdges)+1,] <- c(")
                         .append(quote(e.getName())).append(", ")
@@ -438,7 +468,7 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
 
         sb.append(lineSeparator);
 
-        sb.append("  d$nWeeks <- ").append(problem.getNbWeeks()).append(lineSeparator);
+        //sb.append("  d$nWeeks <- ").append(problem.getNbWeeks()).append(lineSeparator);
 
         sb.append(lineSeparator);
 
@@ -460,4 +490,9 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
     }
 
 
+    public DaySlot getCriticalEndSlot() {
+        double computeCriticalPath = computeCriticalPath();
+        return new DaySlot(0, Math.floorDiv((int)computeCriticalPath, (24*7)) + 1, Math.floorDiv((int)computeCriticalPath, 24) + 1,
+				computeCriticalPath % 24, computeCriticalPath % 24, null);
+    }
 }

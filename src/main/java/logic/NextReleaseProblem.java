@@ -39,20 +39,20 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 	private static final long serialVersionUID = 3302475694747789178L; // Generated Id
 
     private static final int INDEX_PRIORITY_OBJECTIVE = 0; // The index of the priority score objective in the objectives list
-	private static final int INDEX_END_DATE_OBJECTIVE = 1; // The index of the end date objective in the objectives list
-	private static final int INDEX_DISTRIBUTION_OBJECTIVE = 2;	// Make sure to
+	private static final int INDEX_SUBOBJECTIVES = 1; // The index of the end date objective in the objectives list
+	private static final int INDEX_SIMILARITY_OBJECTIVE = 2;	// Make sure to
 	
 	private static final Logger logger = LoggerFactory.getLogger(NextReleaseProblem.class);
 
 	// PROBLEM
 	private List<Feature> features;
 	private List<Employee> employees;
-	private ApiPlanningSolution prevSolution;
-	private double replanHour; 		// The hour of the requested replan
-	private int nbWeeks; 			// The number of weeks of the iteration
-	private double nbHoursByWeek; 	// The number of worked hours by week
+	private DaySlot replanTime;
 	private AlgorithmParameters algorithmParameters;
 	private EvaluationParameters evaluationParameters;
+
+	//PREVIOUS SOLUTION
+	private Schedule previousSchedule;
 
 	// SOLUTION
 	private NumberOfViolatedConstraints<PlanningSolution> numberOfViolatedConstraints;
@@ -60,32 +60,13 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 	private SolutionQuality solutionQuality;
 	private double precedenceConstraintOverall; //The overall of a violated constraint
 	private double worstScore; //The priority score if there is no planned feature
-	private double worstEndDate; //The worst end date, if there is no planned feature
 
-	// GETTERS / SETTERS
-	public double getReplanHour() {
-		return replanHour;
-	}
-	public void setReplanHour(double replanHour) {
-		this.replanHour = replanHour;
-	}
-	public ApiPlanningSolution getPreviousSolution() {
-		return prevSolution;
-	}
-	public void setPreviousSolution(ApiPlanningSolution previousSolution) {
-		this.prevSolution = previousSolution;
-	}
+    // GETTERS / SETTERS
 	public List<Feature> getFeatures() {
 		return features;
 	}
 	public void setFeatures(List<Feature> features) {
 		this.features = features;
-	}
-	public int getNbWeeks() {
-		return nbWeeks;
-	}
-	public double getNbHoursByWeek() {
-		return nbHoursByWeek;
 	}
 	public NumberOfViolatedConstraints<PlanningSolution> getNumberOfViolatedConstraints() {
 		return numberOfViolatedConstraints;
@@ -114,7 +95,7 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 	public NextReleaseProblem() {
 		setName("Next Release Problem");
 		setNumberOfVariables(1);
-		setNumberOfObjectives(4);
+		setNumberOfObjectives(2);
 		features = new ArrayList<>();
 		numberOfViolatedConstraints = new NumberOfViolatedConstraints<>();
 		overallConstraintViolation = new OverallConstraintViolation<>();
@@ -123,49 +104,36 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 		evaluationParameters = new EvaluationParameters();
 	}
 
-	// Constructor (normal)
-	public NextReleaseProblem(List<Feature> features, List<Employee> employees, int nbWeeks, double nbHoursPerWeek) {
+	// Constructor
+	public NextReleaseProblem(List<Feature> features,
+							  List<Employee> employees) {
 		this();
-		
 		this.employees = employees;
-		this.nbWeeks = nbWeeks;
-		this.nbHoursByWeek = nbHoursPerWeek;
+		this.features = new ArrayList<>();
 
-		// TODO: If a feature is not included because 1. lack of skills or 2. the dependee is not included; this information should be noted somewhere and send back to the controller once the plan is produced).
-		// checks that features can be satisfied by the skills of the resources and the dependencies are included
 		for (Feature feature : features)
 			if (getSkilledEmployees(feature.getRequiredSkills()).size() > 0) // 1.
 				if (features.containsAll(feature.getPreviousFeatures())) // 2.
 					this.features.add(feature);
-		
-		worstEndDate = nbWeeks * nbHoursByWeek;
-		replanHour = 0.0;
 
 		initializeWorstScore();
 		initializeNumberOfConstraint();
+
+		//FIXME Placeholder daySlot
+		this.replanTime = new DaySlot(0, 0, 0, 0, 0, null);
+
 	}
-	
-	public void setTag(String name) {
-		setName(name);
-	}
-	
-	// Constructor (for replanning)
-	public NextReleaseProblem(ApiPlanningSolution previousSolution, List<Feature> features, List<Employee> employees,
-								int nbWeeks, double nbHoursPerWeek, double replanHour) {
-		this(features, employees, nbWeeks, nbHoursPerWeek);
-		this.prevSolution = previousSolution;
-		this.replanHour = replanHour;
-		
+
+	public NextReleaseProblem(List<Feature> features, List<Employee> employees, DaySlot replanTime) {
+		this(features, employees);
+		this.replanTime = replanTime;
 	}
 
 	// Copy constructor
 	public NextReleaseProblem(NextReleaseProblem origin) {
-		this(origin.getFeatures(), origin.getEmployees(), origin.getNbWeeks(), origin.getNbHoursByWeek());
+		this(origin.getFeatures(), origin.getEmployees());
 	}
 
-	public NextReleaseProblem(ApiNextReleaseProblem p, double replanHour) {
-		this(p.getPreviousSolution(), p.getFeatures(), p.getResources(), p.getNbWeeks(), p.getHoursPerWeek(), replanHour);
-	}
 
 	/* ------------ */
 
@@ -194,67 +162,68 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 
 	@Override
 	public PlanningSolution createSolution() {
-		//return new PlanningSolution(this);
-		if (prevSolution != null) return new PlanningSolution(this, prevSolution.getJobs());
-		else return new PlanningSolution(this);
+		return new PlanningSolution(this);
 	}
+
+	public Schedule getPreviousSchedule() {
+		return previousSchedule;
+	}
+
+	public void setPreviousSchedule(Schedule schedule) { this.previousSchedule = schedule;}
 
 	@Override
 	public void evaluate(PlanningSolution solution) {
-		Map<Employee, NewSchedule> planning = new HashMap<Employee, NewSchedule>();
-		List<PlannedFeature> plannedFeatures = solution.getPlannedFeatures();
-		
-        for (PlannedFeature currentPlannedFeature : plannedFeatures) {
-            computeHours(solution, currentPlannedFeature);
-			Employee employee = currentPlannedFeature.getEmployee();
-			NewSchedule employeeNewSchedule = planning.getOrDefault(employee, new NewSchedule(employee, nbWeeks, nbHoursByWeek));
-			
-			if (!employeeNewSchedule.contains(currentPlannedFeature)) {
-                if (!employeeNewSchedule.scheduleFeature(currentPlannedFeature)) {
-                    solution.unschedule(currentPlannedFeature);
-                }
-			}
-			
-			planning.put(employee, employeeNewSchedule);
-        }
-        
-        double endHour = 0.0;
-        for (NewSchedule NewSchedule : planning.values())
-            for (PlannedFeature pf : NewSchedule.getPlannedFeatures())
-                endHour = Math.max(endHour, pf.getEndHour());
 
-		solution.setEmployeesPlanning(planning);
-		solution.setEndDate(endHour);
+		List<PlannedFeature> plannedFeatures = solution.getPlannedFeatures();
+		for (int i = 0; i < plannedFeatures.size(); ++i) {
+			PlannedFeature currentPlannedFeature = plannedFeatures.get(i);
+			List<PlannedFeature> previousPlannedFeatures =
+					getPlannedFeatures(solution, currentPlannedFeature.getFeature().getPreviousFeatures());
+			if (previousPlannedFeatures != null)
+			if (previousPlannedFeatures == null ||
+					!solution.getSchedule().scheduleFeature(currentPlannedFeature, previousPlannedFeatures)) {
+				solution.unschedule(currentPlannedFeature);
+				--i;
+			}
+		}
+
+		List<Employee> solutionEmployees = new ArrayList<>();
+		for (Employee e: employees) {
+			List<DaySlot>  daySlots = new ArrayList<>();
+			for (SlotList slotList : solution.getSchedule().getEmployeesCalendar().get(e)) {
+				daySlots.addAll(slotList.getDaySlots().values());
+			}
+			solutionEmployees.add(new Employee(e.getName(), e.getSkills(), daySlots));
+		}
+		solution.setEmployees(solutionEmployees);
 
 		/* Objectives and quality evaluation */
 		SolutionEvaluator evaluator = SolutionEvaluator.getInstance();
 
-		//solution.setObjective(INDEX_PRIORITY_OBJECTIVE, 1.0 - evaluator.completionObjective(solution));
-        //solution.setObjective(INDEX_END_DATE_OBJECTIVE, 1.0 - evaluator.endDateObjective(solution));
-        //solution.setObjective(INDEX_DISTRIBUTION_OBJECTIVE, 1.0 - evaluator.distributionObjective(solution));
-        
+		solution.setObjective(INDEX_PRIORITY_OBJECTIVE, evaluator.getObjectivePerPriorityLevel(solution, 0));
+        solution.setObjective(INDEX_SUBOBJECTIVES, evaluator.getObjectivePerPriorityLevel(solution,1));
+        //solution.setObjective(INDEX_SIMILARITY_OBJECTIVE, evaluator.similarityObjective(solution));
 
 		solutionQuality.setAttribute(solution, evaluator.newQuality(solution));
+
 	}
 
-	private void computeHours(PlanningSolution solution) {
-        for (PlannedFeature pf : solution.getPlannedFeatures())
-            computeHours(solution, pf);
-    }
+	private void initOldAndNewAgenda(PlanningSolution solution) {
 
-	private void computeHours(PlanningSolution solution, PlannedFeature pf) {
-		double newBeginHour = pf.getBeginHour();
-		Feature feature = pf.getFeature();
-				
-		for (Feature previousFeature : feature.getPreviousFeatures()) {
-			PlannedFeature previousPlannedFeature = solution.findPlannedFeature(previousFeature);
-			if (previousPlannedFeature != null) {
-				newBeginHour = Math.max(newBeginHour, previousPlannedFeature.getEndHour());
+	}
+
+	private List<PlannedFeature> getPlannedFeatures(PlanningSolution solution, List<Feature> previousFeatures) {
+		List<PlannedFeature> previousPlannedFeatures = new ArrayList<>();
+		List<PlannedFeature> plannedFeatures = solution.getPlannedFeatures();
+		for (Feature f : previousFeatures) {
+			for (PlannedFeature pf : plannedFeatures) {
+				if (pf.getFeature().equals(f)) {
+					if (pf.getSlotIds() == null || pf.getSlotIds().size() == 0) return null;
+					else previousPlannedFeatures.add(pf);
+				}
 			}
 		}
-		if (prevSolution != null && !prevSolution.getJobs().contains(pf)) newBeginHour = Math.max(newBeginHour, replanHour);
-		
-		pf.setBeginHour(newBeginHour);
+		return previousPlannedFeatures;
 	}
 
 	@Override
@@ -265,14 +234,6 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 
 		// Precedence constraint
 		for (PlannedFeature currentFeature : solution.getPlannedFeatures()) {
-
-			// Ignore precedence constraint if the planned feature is frozen in the previous plan
-			if (	prevSolution != null &&
-					prevSolution.findJobOf(currentFeature.getFeature()) != null &&
-					prevSolution.getJobs().contains(currentFeature))
-			{
-			    continue;
-            }
 
 			for (Feature previousFeature : currentFeature.getFeature().getPreviousFeatures()) {
 				PlannedFeature previousPlannedFeature = solution.findPlannedFeature(previousFeature);
@@ -286,10 +247,11 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 		violatedConstraints = precedencesViolated;
 
 		// Check if the solution end date exceeds the deadline
-		if (solution.getEndDate() > nbWeeks * nbHoursByWeek) {
+		//FIXME alternate check
+		/*if (solution.getEndDate() > nbWeeks * nbHoursByWeek) {
 			violatedConstraints++;
 			overall -= 1.0;
-		}
+		}*/
 
 		// Check if the employees assigned to the planned features have the required skills
 		for (PlannedFeature plannedFeature : solution.getPlannedFeatures()) {
@@ -310,7 +272,8 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 			}
 		}
 
-		if (prevSolution != null) {
+		//FIXME alternate check
+		/*if (prevSolution != null) {
 			Map<Feature, Employee> previousFeatures = new HashMap<>();
 
 			// Frozen jobs constraint
@@ -331,7 +294,7 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 					overall -= 0.1;
 				}
 			}
-		}
+		}*/
 
 		numberOfViolatedConstraints.setAttribute(solution, violatedConstraints);
 		overallConstraintViolation.setAttribute(solution, overall);
@@ -342,11 +305,19 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("Next Release Problem to plan in " + nbWeeks + " weeks with " + nbHoursByWeek + "h per week\n");
+		sb.append("Next Release Problem to plan\n");
 		sb.append("List of features:\n");
 		for (Feature f : features) sb.append("\t" + f.toString() + "\n");
 		sb.append("List of employees:\n");
 		for (Employee e: employees) sb.append("\t" + e.toString() + "\n");
 		return sb.toString();
+	}
+
+	public DaySlot getReplanTime() {
+		return replanTime;
+	}
+
+	public void setReplanTime(DaySlot replanTime) {
+		this.replanTime = replanTime;
 	}
 }

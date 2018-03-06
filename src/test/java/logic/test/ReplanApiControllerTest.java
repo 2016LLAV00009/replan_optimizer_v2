@@ -34,19 +34,21 @@ public class ReplanApiControllerTest {
     @Test
     public void randomProblem() {
         List<Skill> skills = random.skillList(5);
-        List<Feature> features = random.featureList(5);
-        List<Employee> resources = random.employeeList(10);
+        List<Feature> features = random.featureList(20);
+        List<Employee> resources = random.employeeList(5);
 
         random.mix(features, skills, resources);
 
-        MockHttpServletRequest request = mocker.request(4, 40.0, features, resources);
+        MockHttpServletRequest request = mocker.request(features, resources);
 
         String response = apiController.replan(request).getBody();
+        System.out.println("Response:");
+        System.out.println(response);
 
         ApiPlanningSolution solution = gson.fromJson(response, ApiPlanningSolution.class);
     }
 
-    @Test
+    //@Test
     public void randomProblemWithCustomAlgorithmParameters() {
         List<Skill> skills = random.skillList(5);
         List<Feature> features = random.featureList(5);

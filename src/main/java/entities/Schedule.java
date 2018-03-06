@@ -16,6 +16,32 @@ public class Schedule {
         }
     }
 
+    /*
+    Copy constructor
+     */
+    public Schedule(Schedule origin) {
+        employeesCalendar = new HashMap<>(origin.employeesCalendar);
+        currentSlotIds = new HashMap<>(origin.currentSlotIds);
+    }
+
+    public HashMap<Employee, List<SlotList>> getEmployeesCalendar() { return employeesCalendar; }
+    public void setEmployeesCalendar(HashMap<Employee, List<SlotList>> employeesCalendar) { this.employeesCalendar = employeesCalendar; }
+
+    public HashMap<Employee, Integer> getCurrentSlotIds() { return currentSlotIds; }
+    public void setCurrentSlotIds(HashMap<Employee, Integer> currentSlotIds) { this.currentSlotIds = currentSlotIds; }
+
+    public double getRatio(Employee e) {
+        double totalDuration = 0.0;
+        double workHours = 0.0;
+        for (SlotList slotList : employeesCalendar.get(e)) {
+            Double duration = slotList.getTotalDuration();
+            totalDuration += duration;
+            if (slotList.getSlotStatus().equals(SlotStatus.Used))
+                workHours += duration;
+        }
+        return workHours / totalDuration;
+    }
+
     private int createSlotAgenda(Employee e, List<DaySlot> agenda) {
         Collections.sort(agenda);
         int currentSlotId = 0;
@@ -30,7 +56,10 @@ public class Schedule {
             daySlotHashMap.put(agenda.get(i).getId(), agenda.get(i));
             ++i;
             //While the following slots are of the same status, keep adding them to SlotList instance
-            while (i < agenda.size() && agenda.get(i).getStatus().equals(agenda.get(i - 1).getStatus())) {
+            while (i < agenda.size() &&
+                    ( agenda.get(i).getStatus().equals(SlotStatus.Free) && agenda.get(i-1).getStatus().equals(SlotStatus.Free) ||
+                            agenda.get(i).getStatus().equals(SlotStatus.Used) && agenda.get(i-1).getStatus().equals(SlotStatus.Used)
+                            && agenda.get(i).getFeature().equals(agenda.get(i-1).getFeature())))  {
                 if (currentSlotId < agenda.get(i).getId()) currentSlotId = agenda.get(i).getId();
                 daySlotHashMap.put(agenda.get(i).getId(), agenda.get(i));
                 ++i;
@@ -42,7 +71,10 @@ public class Schedule {
     }
 
     public boolean scheduleFeature(PlannedFeature pf, List<PlannedFeature> previousFeatures) {
-        return scheduleFeature(pf, getLatestPlannedFeature(previousFeatures));
+        if (pf.getSlotIds().size() > 0) {
+            return true;
+        }
+        else return scheduleFeature(pf, getLatestPlannedFeature(previousFeatures));
     }
 
     private DaySlot getLatestPlannedFeature(List<PlannedFeature> previousFeatures) {
@@ -62,18 +94,25 @@ public class Schedule {
 
         SlotList slotAgenda = getFirstAvailableSlot(pf, lastPreviousFeatureEndSlot);
 
-        if (slotAgenda == null)
+        if (slotAgenda == null) {
             return false;
+        }
 
-        //FIXME used lastPreviousFeatureEndSlot always as a placeholder for algorithm simplicity
         if (lastPreviousFeatureEndSlot == null) {
             DaySlot beginSlot = slotAgenda.getDaySlot(slotAgenda.getBeginSlotId());
             lastPreviousFeatureEndSlot = new DaySlot(-1, beginSlot.getWeek(), beginSlot.getDayOfWeek() - 1, beginSlot.getBeginHour(), beginSlot.getBeginHour(), SlotStatus.Free);
         }
-
         updateAgenda(pf, slotAgenda, lastPreviousFeatureEndSlot);
-
         return true;
+    }
+
+    public void forcedSchedule(PlannedFeature pf, List<DaySlot> daySlots) {
+        Collections.sort(daySlots);
+        List<Integer> daySlotsIds = new ArrayList<>();
+        for (DaySlot daySlot : daySlots) daySlotsIds.add(daySlot.getId());
+        pf.setSlotIds(daySlotsIds);
+        pf.setBeginHour(daySlots.get(0).getBeginHourAbsolute());
+        pf.setEndHour(daySlots.get(daySlots.size()-1).getEndHourAbsolute());
     }
 
     private void updateAgenda(PlannedFeature pf, SlotList slotAgenda, DaySlot lastPreviousFeatureEndSlot) {
@@ -86,20 +125,22 @@ public class Schedule {
             int cmp = daySlot.compareByDay(lastPreviousFeatureEndSlot);
             if (cmp < 0) {
                 //If DaySlot is previous to end of previous feature
-                daySlot.setStatus(SlotStatus.Free);
+                //daySlot.setStatus(SlotStatus.Free);
                 previousAgenda.put(daySlot.getId(), daySlot);
             }
             else if (cmp == 0) {
                 DaySlot prevDaySlot = new DaySlot(++currentSlotId, daySlot.getWeek(), daySlot.getDayOfWeek(),
                         daySlot.getBeginHour(), lastPreviousFeatureEndSlot.getEndHour(), SlotStatus.Free);
                 //If last previous feature is ended today
-                previousAgenda.put(currentSlotId, prevDaySlot);
+                if (lastPreviousFeatureEndSlot.getEndHour() - daySlot.getBeginHour() > 0)
+                    previousAgenda.put(currentSlotId, prevDaySlot);
 
                 if (daySlot.getEndHour() - lastPreviousFeatureEndSlot.getEndHour() > 0) {
                     double hour = Math.min(lastPreviousFeatureEndSlot.getEndHour() + remainingHours,
                             daySlot.getEndHour());
                     DaySlot thisDaySlot = new DaySlot(++currentSlotId, daySlot.getWeek(), daySlot.getDayOfWeek(),
                             lastPreviousFeatureEndSlot.getEndHour(), hour, SlotStatus.Used);
+                    thisDaySlot.setFeature(pf.getFeature());
                     //If after ending previous feature there are remaining work hours
                     thisAgenda.put(currentSlotId, thisDaySlot);
                     remainingHours -= (hour - lastPreviousFeatureEndSlot.getEndHour());
@@ -119,6 +160,7 @@ public class Schedule {
                     if (daySlot.getBeginHour() + hour < daySlot.getEndHour()) {
                         DaySlot thisDaySlot = new DaySlot(++currentSlotId, daySlot.getWeek(), daySlot.getDayOfWeek(),
                                 daySlot.getBeginHour(), daySlot.getBeginHour() + hour, SlotStatus.Used);
+                        thisDaySlot.setFeature(pf.getFeature());
                         thisAgenda.put(currentSlotId, thisDaySlot);
 
                         DaySlot afterDaySlot = new DaySlot(++currentSlotId, daySlot.getWeek(), daySlot.getDayOfWeek(),
@@ -127,6 +169,7 @@ public class Schedule {
                         laterAgenda.put(currentSlotId, afterDaySlot);
                     } else {
                         daySlot.setStatus(SlotStatus.Used);
+                        daySlot.setFeature(pf.getFeature());
                         thisAgenda.put(daySlot.getId(), daySlot);
                     }
                 } else {
@@ -149,6 +192,14 @@ public class Schedule {
             daySlotIds.add(i);
         }
         pf.setSlotIds(daySlotIds);
+        if (daySlotIds.size() == 0) {
+            System.out.println("Trying to schedule " + pf.getFeature().getName() + " of duration " + pf.getFeature().getDuration()
+            + " after " + lastPreviousFeatureEndSlot.toString() + " at " + slotAgenda.getDaySlot(slotAgenda.getBeginSlotId()));
+            System.out.println(toString());
+        }
+        pf.setBeginHour(thisAgenda.get(daySlotIds.get(0)).getBeginHourAbsolute());
+        pf.setEndHour(thisAgenda.get(daySlotIds.get(thisAgenda.size()-1)).getEndHourAbsolute());
+
     }
 
     private SlotList getFirstAvailableSlot(PlannedFeature pf, DaySlot lastPreviousFeatureEndSlot) {
@@ -171,6 +222,24 @@ public class Schedule {
         return null;
     }
 
+    public DaySlot getEndDaySlot(SlotStatus status) {
+        DaySlot currentDaySlot = null;
+        for (Employee e : employeesCalendar.keySet()) {
+            for (SlotList slotList : employeesCalendar.get(e)) {
+                for (DaySlot nextDaySlot : slotList.getDaySlots().values()) {
+                    if (currentDaySlot == null) {
+                        if (status == null || status != null && status.equals(nextDaySlot.getStatus()))
+                            currentDaySlot = nextDaySlot;
+                    } else if (currentDaySlot.compareTo(nextDaySlot) < 0) {
+                        if (status == null || status != null && status.equals(nextDaySlot.getStatus()))
+                            currentDaySlot = nextDaySlot;
+                    }
+                }
+            }
+        }
+        return currentDaySlot;
+    }
+
     @Override
     public String toString() {
         String s = "";
@@ -179,7 +248,7 @@ public class Schedule {
             for (SlotList slotList : employeesCalendar.get(e)) {
                 s += "\tSlot [" + slotList.getSlotStatus() + "]\n";
                 for (DaySlot daySlot : slotList.getDaySlots().values()) {
-                    s += "\t\t[" + daySlot.getId() + "] Week " + daySlot.getWeek() +  ", day " + daySlot.getDayOfWeek() + ", begins at " +
+                    s += "\t\t[" + daySlot.getId() + "][" + daySlot.getFeature() + "] Week " + daySlot.getWeek() +  ", day " + daySlot.getDayOfWeek() + ", begins at " +
                             daySlot.getBeginHour() + " and ends at " + daySlot.getEndHour() + "\n";
                 }
             }
@@ -187,4 +256,24 @@ public class Schedule {
         return s;
     }
 
+    public PlannedFeature findJobOf(Feature f) {
+        for (Employee e : employeesCalendar.keySet()) {
+            List<SlotList> slotLists = employeesCalendar.get(e);
+            for (SlotList slotList : slotLists) {
+                if (slotList.getSlotStatus().equals(SlotStatus.Used)) {
+                    DaySlot daySlot = slotList.getDaySlot(slotList.getBeginSlotId());
+                    if (daySlot.getFeature()!= null && daySlot.getFeature().equals(f.getName())) {
+                        PlannedFeature pf = new PlannedFeature(f,e);
+                        List<Integer> ids = new ArrayList<>();
+                        ids.addAll(slotList.getDaySlots().keySet());
+                        pf.setSlotIds(ids);
+                        pf.setBeginHour(slotList.getDaySlot(slotList.getBeginSlotId()).getBeginHourAbsolute());
+                        pf.setEndHour(slotList.getDaySlot(slotList.getEndSlotId()).getEndHourAbsolute());
+                        return pf;
+                    }
+                }
+            }
+        }
+        return null;
+    }
 }

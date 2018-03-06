@@ -1,5 +1,6 @@
 package io.swagger.model;
 
+import entities.Employee;
 import entities.Feature;
 import entities.PlannedFeature;
 import logic.PlanningSolution;
@@ -16,22 +17,30 @@ import java.util.List;
  */
 public class ApiPlanningSolution {
 
-    private List<PlannedFeature> jobs;
+    private List<Employee> employees;
 
     /* --- CONSTRUCTORS --- */
     public ApiPlanningSolution() {
-        jobs = new ArrayList<>();
+        employees = new ArrayList<>();
     }
 
     public ApiPlanningSolution(PlanningSolution solution) {
-        jobs = solution.getPlannedFeatures();
+        employees = solution.getEmployees();
     }
 
 
 
     /* --- GETTERS / SETTERS --- */
 
-    public List<PlannedFeature> getJobs() {
+    public List<Employee> getEmployees() {
+        return employees;
+    }
+
+    public void setEmployees(List<Employee> employees) {
+        this.employees = employees;
+    }
+
+    /*public List<PlannedFeature> getJobs() {
         return jobs;
     }
 
@@ -45,5 +54,5 @@ public class ApiPlanningSolution {
                 return pf;
 
         return null;
-    }
+    }*/
 }

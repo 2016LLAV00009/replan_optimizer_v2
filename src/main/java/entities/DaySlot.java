@@ -1,5 +1,7 @@
 package entities;
 
+import io.swagger.annotations.ApiModelProperty;
+
 public class DaySlot implements Comparable<DaySlot> {
 
 
@@ -9,6 +11,7 @@ public class DaySlot implements Comparable<DaySlot> {
     private double beginHour;
     private double endHour;
     private SlotStatus status;
+    private String featureId;
 
     public DaySlot(int id, int week, int dayOfWeek, double beginHour, double endHour,
                    SlotStatus status) {
@@ -18,6 +21,16 @@ public class DaySlot implements Comparable<DaySlot> {
         this.beginHour = beginHour;
         this.endHour = endHour;
         this.status = status;
+    }
+
+    public DaySlot(DaySlot daySlot) {
+        this.id = daySlot.getId();
+        this.week = daySlot.getWeek();
+        this.dayOfWeek = daySlot.getDayOfWeek();
+        this.beginHour = daySlot.getBeginHour();
+        this.endHour = daySlot.getEndHour();
+        this.status = daySlot.getStatus();
+        this.featureId = daySlot.getFeature();
     }
 
     public int getId() { return id; }
@@ -38,12 +51,28 @@ public class DaySlot implements Comparable<DaySlot> {
     public SlotStatus getStatus() { return status; }
     public void setStatus(SlotStatus status) { this.status = status; }
 
+    public String getFeature() { return featureId; }
+    public void setFeature(Feature feature) { this.featureId = feature.getName(); }
+    public void setFeatureId(String featureId) { this.featureId = featureId; }
+
     public double getDuration() {
         return endHour - beginHour;
     }
 
     public int compareByDay(DaySlot daySlot) {
         return (this.week * 7 + this.dayOfWeek) - (daySlot.week * 7 + daySlot.dayOfWeek);
+    }
+
+    public double getEndHourAbsolute() {
+        return this.week * 7 * 24
+                + this.dayOfWeek * 24
+                + this.endHour;
+    }
+
+    public double getBeginHourAbsolute() {
+        return this.week * 7 * 24
+                + this.dayOfWeek * 24
+                + this.beginHour;
     }
 
     @Override

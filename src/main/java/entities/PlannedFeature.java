@@ -1,5 +1,6 @@
 package entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.gson.annotations.SerializedName;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -26,19 +27,8 @@ public class PlannedFeature {
 	private boolean frozen;
 
 	/**
-	 * The begin hour of the planned feature
-	 */
-	private double beginHour;
-
-	/**
-	 * The end hour of the planned feature
-	 */
-	private double endHour;
-
-	/**
 	 * The employee who will do the feature
 	 */
-	@SerializedName("resource")
 	private Employee employee;
 	
 	/**
@@ -46,12 +36,16 @@ public class PlannedFeature {
 	 */
 	private Feature feature;
 
+	/**
+	 * The list of slot ids performing the feature
+	 */
 	private List<Integer> slotIds;
 
+	private double endHour;
+	private double beginHour;
 	
 	/* --- Getters and setters --- */
 
-	@ApiModelProperty(value = "")
 	public boolean isFrozen() {
 		return frozen;
 	}
@@ -60,7 +54,6 @@ public class PlannedFeature {
 		this.frozen = frozen;
 	}
 
-	@ApiModelProperty(value = "")
 	public double getBeginHour() {
 		return beginHour;
 	}
@@ -69,7 +62,6 @@ public class PlannedFeature {
 		this.beginHour = beginHour;
 	}
 
-	@ApiModelProperty(value = "")
 	public double getEndHour() {
 		return endHour;
 	}
@@ -82,11 +74,12 @@ public class PlannedFeature {
 
 	public int getEndSlotId() { return slotIds.get(slotIds.size()-1); }
 
+	public List<Integer> getSlotIds() { return this.slotIds; }
+
 	public void setSlotIds(List<Integer> slotIds) {
 		this.slotIds = slotIds;
 	}
 
-	@ApiModelProperty(value = "")
 	public Employee getEmployee() {
 		return employee;
 	}
@@ -95,7 +88,6 @@ public class PlannedFeature {
 		this.employee = employee;
 	}
 
-	@ApiModelProperty(value = "")
 	public Feature getFeature() {
 		return feature;
 	}

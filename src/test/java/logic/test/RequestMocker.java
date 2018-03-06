@@ -15,15 +15,15 @@ public class RequestMocker {
 
     private static Gson gson = ReplanGson.getGson();
 
-    public MockHttpServletRequest request(int nbWeeks, double hoursPerWeek,
-                        List<Feature> features, List<Employee> resources)
+    public MockHttpServletRequest request(List<Feature> features, List<Employee> resources)
     {
-        ApiNextReleaseProblem problem = new ApiNextReleaseProblem(nbWeeks, hoursPerWeek, features, resources);
+        ApiNextReleaseProblem problem = new ApiNextReleaseProblem(features, resources);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setContentType("application/json");
 
         request.setContent(gson.toJson(problem).getBytes());
+        System.out.println(gson.toJson(problem));
 
         return request;
     }

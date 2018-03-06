@@ -2,7 +2,6 @@ package logic.analytics;
 
 import entities.Employee;
 import entities.Feature;
-import entities.NewSchedule;
 import entities.PlannedFeature;
 import logic.PlanningSolution;
 
@@ -29,7 +28,7 @@ public class EmployeeAnalytics {
 
         this.employee = employee;
         doableFeatures = utils.doableFeatures(employee);
-        startHour = utils.startHour(employee);
+        /*startHour = utils.startHour(employee);
         endHour = utils.endHour(employee);
         totalAvailability = employee.getWeekAvailability() * solution.getProblem().getNbWeeks();
 
@@ -37,7 +36,7 @@ public class EmployeeAnalytics {
         doneFeatures = s == null ? new ArrayList<>() :
                 s.getPlannedFeatures().stream().map(PlannedFeature::getFeature).collect(Collectors.toList());;
         doneHours = s == null ? 0.0 : s.getPlannedFeatures().stream()
-                .map(PlannedFeature::getFeature).mapToDouble(Feature::getDuration).sum();
+                .map(PlannedFeature::getFeature).mapToDouble(Feature::getDuration).sum();*/
         doableFeatureHours = doableFeatures.stream().mapToDouble(Feature::getDuration).sum();
         workload = (doneHours / totalAvailability) * 100;
     }

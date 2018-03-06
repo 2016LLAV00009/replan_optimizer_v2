@@ -2,6 +2,7 @@ package logic.testing;
 
 import java.util.List;
 
+import entities.DaySlot;
 import org.uma.jmetal.util.pseudorandom.JMetalRandom;
 
 import entities.Employee;
@@ -62,7 +63,7 @@ public class ParameterizedNRP {
 		
 		for (int i = 0; i < nbEmployees; ++i) {
 			Employee e = employees.get(i);
-			e.setWeekAvailability(availabilityRates[i] * nbHoursPerWeek);
+			//e.setWeekAvailability(availabilityRates[i] * nbHoursPerWeek);
 			
 			for (int j = 0; j < nbSkills; ++j) {
 				if (jRandom.nextDouble(0,1.0) <= skillEmployeeRates[j]) 
@@ -86,7 +87,10 @@ public class ParameterizedNRP {
 			}
 		}
 
-		return new NextReleaseProblem(features, employees, nbWeeks, nbHoursPerWeek);
+		List<DaySlot> daySlots = random.getAgenda(4, 8.0);
+		for (Employee e : employees) e.setCalendar(daySlots);
+
+		return new NextReleaseProblem(features, employees);
 	}
 	
 	private int findMaxProbable(double[] rates) {

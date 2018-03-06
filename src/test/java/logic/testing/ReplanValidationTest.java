@@ -12,7 +12,6 @@ import entities.Employee;
 import entities.Feature;
 import entities.PlannedFeature;
 import entities.Skill;
-import entities.WeekSchedule;
 import io.swagger.model.ApiPlanningSolution;
 import logic.NextReleaseProblem;
 import logic.PlanningSolution;
@@ -59,7 +58,7 @@ public class ReplanValidationTest {
         features.get(9).getRequiredSkills().add(skills.get(0));
 
 
-        NextReleaseProblem problem = new NextReleaseProblem(features, employees, 5, 40.0);
+        NextReleaseProblem problem = new NextReleaseProblem(features, employees);
         PlanningSolution solution = solver.executeNRP(problem);
         System.out.println(solution.toString());
         
@@ -72,7 +71,10 @@ public class ReplanValidationTest {
         System.out.println("Adding a new employee and replanning at " + replanHour);
         ApiPlanningSolution apiPlanningSolution = new ApiPlanningSolution(solution);
         
-        NextReleaseProblem replanProblem = new NextReleaseProblem(apiPlanningSolution, features, employees, 5, 40.0, replanHour);
+
+
+        /*NextReleaseProblem replanProblem = new NextReleaseProblem(apiPlanningSolution, features, employees, 5, 40.0, replanHour);
+        //TODO replan
         PlanningSolution replanSolution = solver.executeNRP(replanProblem);
         System.out.println(replanSolution.toString());
         /*for (Employee e : replanSolution.getEmployeesPlanning().keySet()) {
@@ -90,8 +92,8 @@ public class ReplanValidationTest {
         List<Feature> features = random.featureList(10);
         
         employees.get(0).getSkills().add(skills.get(0));
-        employees.get(0).setWeekAvailability(15.0);
-        employees.get(1).setWeekAvailability(37.5);
+      //  employees.get(0).setWeekAvailability(15.0);
+        //employees.get(1).setWeekAvailability(37.5);
         employees.get(1).getSkills().add(skills.get(0));
         
         features.get(0).getRequiredSkills().add(skills.get(0));
@@ -105,14 +107,14 @@ public class ReplanValidationTest {
         features.get(8).getRequiredSkills().add(skills.get(0));
         features.get(9).getRequiredSkills().add(skills.get(0));
         
-        NextReleaseProblem problem = new NextReleaseProblem(features, employees, 5, 40.0);
+        NextReleaseProblem problem = new NextReleaseProblem(features, employees);
         PlanningSolution solution = solver.executeNRP(problem);
         System.out.println(solution.toString());
         
         Employee newE = random.employee();
         newE.getSkills().add(skills.get(0));
         employees.add(newE);
-        newE.setWeekAvailability(20.0);
+        //newE.setWeekAvailability(20.0);
         
         List<Feature> smallFeatures = random.featureList(10);
         smallFeatures.get(0).getRequiredSkills().add(skills.get(0));
@@ -147,9 +149,10 @@ public class ReplanValidationTest {
         features.addAll(smallFeatures);
         
         ApiPlanningSolution apiPlanningSolution = new ApiPlanningSolution(solution);
-        NextReleaseProblem replanProblem = new NextReleaseProblem(apiPlanningSolution, features, employees, 5, 40.0, replanHour);
+        //FIXME replan
+        /*NextReleaseProblem replanProblem = new NextReleaseProblem(apiPlanningSolution, features, employees, 5, 40.0, replanHour);
         PlanningSolution replanSolution = solver.executeNRP(replanProblem);
-        System.out.println(replanSolution.toString());
+        System.out.println(replanSolution.toString());*/
         
 	}
 	

@@ -61,8 +61,6 @@ public class SingleAnalyticsExecution {
         employees.get(3).getSkills().add(skills.get(4));
         employees.get(3).getSkills().add(skills.get(3));
 
-        employees.get(3).setWeekAvailability(1.0);
-
         // dependencies
         //features.get(3).getPreviousFeatures().add(features.get(0));
         //features.get(3).getPreviousFeatures().add(features.get(1));
@@ -134,7 +132,7 @@ public class SingleAnalyticsExecution {
 
 
         for (int i = 0; i < 10; ++i) {
-            NextReleaseProblem problem = new NextReleaseProblem(features, employees, 4, 40.0);
+            NextReleaseProblem problem = new NextReleaseProblem(features, employees);
             PlanningSolution solution = solver.executeNRP(problem);
 
             validator.validateAll(solution);

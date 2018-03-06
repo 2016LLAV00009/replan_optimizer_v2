@@ -3,7 +3,6 @@ package logic;
 import entities.Employee;
 import entities.Feature;
 import entities.PlannedFeature;
-import entities.NewSchedule;
 import entities.parameters.AlgorithmParameters;
 import entities.parameters.EvaluationParameters;
 import logic.analytics.Analytics;
@@ -18,7 +17,6 @@ import org.uma.jmetal.algorithm.multiobjective.nsgaii.NSGAIIBuilder;
 import org.uma.jmetal.algorithm.multiobjective.pesa2.PESA2Builder;
 import org.uma.jmetal.algorithm.multiobjective.smsemoa.SMSEMOABuilder;
 import org.uma.jmetal.algorithm.multiobjective.spea2.SPEA2Builder;
-import org.uma.jmetal.measure.MeasureManager;
 import org.uma.jmetal.measure.PullMeasure;
 import org.uma.jmetal.operator.CrossoverOperator;
 import org.uma.jmetal.operator.MutationOperator;
@@ -29,10 +27,8 @@ import org.uma.jmetal.util.evaluator.impl.SequentialSolutionListEvaluator;
 import org.uma.jmetal.util.neighborhood.impl.C9;
 import org.uma.jmetal.util.solutionattribute.impl.NumberOfViolatedConstraints;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -183,68 +179,6 @@ public class SolverNRP {
         return solution;
     }
 
-    // Tries to schedule undone features to the least busy employee if there is enough time
-    @Deprecated
-    private void postprocess(PlanningSolution solution) {
-        Utils utils = new Utils(solution);
-        NextReleaseProblem problem = solution.getProblem();
-        Map<Employee, EmployeeAnalytics> employeesInfo = new HashMap<>();
-
-        for (Employee e : solution.getProblem().getEmployees())
-            employeesInfo.put(e, new EmployeeAnalytics(e, solution));
-
-        for (Feature f : solution.getUndoneFeatures()) {
-
-            // Skip any frozen feature left unplanned because it would likely generate an invalid solution
-            if (problem.getPreviousSolution() != null) {
-                PlannedFeature pf = problem.getPreviousSolution().findJobOf(f);
-                if (pf != null && pf.isFrozen())
-                    continue;
-            }
-
-            if (utils.allPrecedencesArePlanned(f)) {
-                List<Employee> doableBy = utils.doableBy(f).stream()
-                        .filter(e -> utils.hadEnoughTime(e, f))
-                        .filter(e -> utils.couldRespectPrecedences(e, f))
-                        .collect(Collectors.toList());
-
-                if (!doableBy.isEmpty()) {
-                    Employee e = doableBy.get(0);
-
-                    // Let's assign it to the least busy employee
-                    for (Employee e2 : doableBy)
-                        if (employeesInfo.get(e2).getWorkload() < employeesInfo.get(e).getWorkload())
-                            e = e2;
-
-                    PlannedFeature pf = new PlannedFeature(f, e);
-                    utils.computeHours(pf);
-                    NewSchedule s = solution.getEmployeesPlanning().get(e);
-
-                    s.scheduleFeature(pf);
-
-                    // Don't forget to update the solution's internal state
-                    solution.getPlannedFeatures().add(pf);
-                    solution.getUndoneFeatures().remove(f);
-                    //FIXME updated end date when reprocessing
-                    solution.setEndDate(Math.max(pf.getEndHour(), solution.getEndDate()));
-                }
-            }
-        }
-    }
-
-    /*
-        The generated solution might violate constraints in case the solver does not find a better one.
-        In that case, the planning is invalid and should be cleared.
-    */
-    private void clearSolutionIfNotValid(PlanningSolution solution) {
-        NumberOfViolatedConstraints<PlanningSolution> numberOfViolatedConstraints = new NumberOfViolatedConstraints<>();
-        // TODO: We should know the reason of the violation.
-        if (numberOfViolatedConstraints.getAttribute(solution) > 0) {
-            solution.getEmployeesPlanning().clear();
-            for (PlannedFeature plannedFeature : solution.getPlannedFeatures())
-                solution.unschedule(plannedFeature);
-        }
-    }
 
     private PlanningSolution generatePlanningSolution(NextReleaseProblem problem) {
 
@@ -275,7 +209,7 @@ public class SolverNRP {
 
         crossover = new PlanningCrossoverOperator(problem);
         mutation = new PlanningMutationOperator(problem);
-        selection = new BinaryTournamentSelection<>(new PlanningSolutionDominanceComparator());
+        selection = new BinaryTournamentSelection<>();
         evaluator = new SequentialSolutionListEvaluator<>();
 
         AlgorithmParameters parameters = problem.getAlgorithmParameters();

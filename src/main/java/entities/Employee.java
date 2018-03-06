@@ -1,6 +1,7 @@
 package entities;
 
 import com.google.gson.annotations.SerializedName;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.ArrayList;
@@ -15,8 +16,7 @@ public class Employee {
 
 	private String name;
 	private List<Skill> skills;
-	@SerializedName("availability") private double weekAvailability;	// In hours
-
+	private List<DaySlot> calendar;
 	
 	/* --- GETTERS / SETTERS --- */
 
@@ -34,35 +34,25 @@ public class Employee {
 		this.skills = skills;
 	}
 
-	@ApiModelProperty(value = "") public double getWeekAvailability() {
-		return weekAvailability;
-	}
-	public void setWeekAvailability(double weekAvailability) {
-		this.weekAvailability = weekAvailability;
-	}
-	
-
+	@ApiModelProperty(value = "") public List<DaySlot> getCalendar() { return calendar; }
+	public void setCalendar(List<DaySlot> calendar) { this.calendar = calendar; }
 
 	/* --- CONSTRUCTORS --- */
 
 	public Employee() {
         skills = new ArrayList<>();
     }
-	
-	/**
-	 * @param weekAvailability in hours per week
-	 */
-	public Employee(String name, double weekAvailability, List<Skill> skills) {
-		this.name = name;
-		this.weekAvailability = weekAvailability;
-		this.skills = skills == null ? new ArrayList<Skill>() : skills;
-	}
 
 	public Employee(String name, List<Skill> skills) {
 		this.name = name;
 		this.skills = skills == null ? new ArrayList<Skill>() : skills;
 	}
 
+	public Employee(String name, List<Skill> skills, List<DaySlot> calendar) {
+		this.name = name;
+		this.skills = skills == null ? new ArrayList<Skill>() : skills;
+		this.calendar = calendar;
+	}
 
 	/* --- OTHER --- */
 	@Override 
@@ -91,4 +81,12 @@ public class Employee {
 	public int hashCode() {
 		return getName().length();
 	}
+
+    public List<DaySlot> copyCalendar() {
+		List<DaySlot> copy = new ArrayList<>();
+		for (DaySlot daySlot : calendar) {
+			copy.add(new DaySlot(daySlot));
+		}
+		return copy;
+    }
 }
