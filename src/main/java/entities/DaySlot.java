@@ -13,6 +13,10 @@ public class DaySlot implements Comparable<DaySlot> {
     private SlotStatus status;
     private String featureId;
 
+    public DaySlot() {
+
+    }
+
     public DaySlot(int id, int week, int dayOfWeek, double beginHour, double endHour,
                    SlotStatus status) {
         this.id = id;

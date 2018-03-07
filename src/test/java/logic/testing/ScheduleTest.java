@@ -85,7 +85,7 @@ public class ScheduleTest {
     @Test
     public void test() {
         List<Employee> employees = randomThings.employeeList(1);
-        List<Feature> features = randomThings.featureList(20);
+        List<Feature> features = randomThings.featureList(5);
 
         DaySlot day1 = new DaySlot(1,1,1, 8.0, 17.0, SlotStatus.Used);
         day1.setFeature(features.get(0));
@@ -95,11 +95,19 @@ public class ScheduleTest {
         day3.setFeature(features.get(1));
         DaySlot day4 = new DaySlot(4, 1, 4, 8.0, 17.0, SlotStatus.Free);
         DaySlot day5 = new DaySlot(5, 1, 5, 8.0, 17.0, SlotStatus.Used);
+
+        DaySlot day6 = new DaySlot(6, 2, 1, 8.0, 17.0, SlotStatus.Free);
+        DaySlot day7 = new DaySlot(7, 2, 2, 8.0, 17.0, SlotStatus.Free);
+        DaySlot day8 = new DaySlot(8, 2, 3, 8.0, 17.0, SlotStatus.Free);
+        DaySlot day9 = new DaySlot(9, 2, 4, 8.0, 17.0, SlotStatus.Free);
+        DaySlot day10 = new DaySlot(10, 2, 5, 8.0, 17.0, SlotStatus.Free);
+
+
         day5.setFeature(features.get(2));
 
-        employees.get(0).setCalendar(Arrays.asList(day1,day2,day3,day4,day5));
+        employees.get(0).setCalendar(Arrays.asList(day1,day2,day3,day4,day5,day6,day7,day8,day9,day10));
 
-        DaySlot replan = new DaySlot(0, 1, 4, 17.0, 0, null);
+        DaySlot replan = new DaySlot(0, 1, 3, 8, 0, null);
         NextReleaseProblem next = new NextReleaseProblem(features, employees, replan);
         PlanningSolution ps = new PlanningSolution(next);
 

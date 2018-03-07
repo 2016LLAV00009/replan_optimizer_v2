@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.google.gson.JsonSyntaxException;
 
+import entities.DaySlot;
 import entities.Employee;
 import entities.Feature;
 import entities.parameters.AlgorithmParameters;
@@ -33,7 +34,7 @@ public class ApiNextReleaseProblem {
 
     private List<Employee> resources = new ArrayList<>();
 
-    private double replanHour;
+    private DaySlot replanTime;
 
     private AlgorithmParameters algorithmParameters = null;
 
@@ -59,10 +60,10 @@ public class ApiNextReleaseProblem {
     Replan constructor
      */
     public ApiNextReleaseProblem(
-           List<Feature> features, List<Employee> resources, double replanHour)
+           List<Feature> features, List<Employee> resources, DaySlot replanTime)
     {
         this(features, resources);
-        this.replanHour = replanHour;
+        this.replanTime = replanTime;
     }
 
     /**
@@ -103,8 +104,8 @@ public class ApiNextReleaseProblem {
     public void setAlgorithmParameters(AlgorithmParameters algorithmParameters) { this.algorithmParameters = algorithmParameters; }
 
     @ApiModelProperty(value="")
-    public double getReplanHour() { return replanHour; }
-    public void setReplanHour(double replanHour) { this.replanHour = replanHour; }
+    public DaySlot getReplanTime() { return replanTime; }
+    public void setReplanTime(DaySlot replanTime) { this.replanTime = replanTime; }
     
     @ApiModelProperty(value="")
     public EvaluationParameters getEvaluationParameters() {

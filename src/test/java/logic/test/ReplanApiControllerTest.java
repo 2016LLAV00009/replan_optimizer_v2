@@ -1,5 +1,6 @@
 package logic.test;
 import com.google.gson.Gson;
+import entities.DaySlot;
 import entities.Employee;
 import entities.Feature;
 import entities.Skill;
@@ -46,6 +47,16 @@ public class ReplanApiControllerTest {
         System.out.println(response);
 
         ApiPlanningSolution solution = gson.fromJson(response, ApiPlanningSolution.class);
+
+        DaySlot replan = new DaySlot();
+        replan.setWeek(2);
+        replan.setDayOfWeek(1);
+        replan.setBeginHour(8.0);
+
+        MockHttpServletRequest replanRequest = mocker.request(features, solution.getEmployees(), replan);
+        String replanResponse = apiController.replan(replanRequest).getBody();
+        System.out.println("Replan at week " + replan.getWeek() + ", day " + replan.getDayOfWeek() + ", hour " + replan.getBeginHour());
+        System.out.println(replanResponse);
     }
 
     //@Test

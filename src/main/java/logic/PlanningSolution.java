@@ -89,58 +89,6 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
 	    initializeObjectiveValues();
 	}
 
-	public void initOldAndNewAgenda() {
-		HashMap<Employee, List<DaySlot>> agenda = new HashMap<>();
-		HashMap<Employee, List<DaySlot>> previous = new HashMap<>();
-		for (Employee e : employees) {
-			previous.put(e, e.copyCalendar());
-			agenda.put(e, e.copyCalendar());
-		}
-		setSchedule(new Schedule(agenda));
-		Schedule schedule = getSchedule();
-
-		HashMap<Employee, List<DaySlot>> newDaySlots = new HashMap<>();
-
-		HashMap<PlannedFeature, List<DaySlot>> listPfs = new HashMap<>();
-
-		//System.out.println(schedule.toString());
-		for (Employee e : schedule.getEmployeesCalendar().keySet()) {
-			//System.out.println("Let's check employee " + e);
-			List<SlotList> slotLists = schedule.getEmployeesCalendar().get(e);
-			for (SlotList slotList : slotLists) {
-				if (slotList.getSlotStatus().equals(SlotStatus.Used)) {
-					DaySlot endSlot = slotList.getDaySlot(slotList.getEndSlotId());
-					//If the slotList ends after the replan time, release it
-					//System.out.println(schedule.toString());
-					if (problem.getReplanTime().compareByDay(endSlot) < 0
-							|| problem.getReplanTime().compareByDay(endSlot) == 0 && problem.getReplanTime().getBeginHour() >= endSlot.getEndHour()) {
-						for (DaySlot daySlot : slotList.getDaySlots().values()) {
-							daySlot.setStatus(SlotStatus.Free);
-							daySlot.setFeatureId(null);
-						}
-					}
-					//If the slotList ends before the replan time, schedule feature
-					else {
-						Feature f = undoneFeatures.stream().filter(feature -> feature.getName().equals(endSlot.getFeature())).findFirst().get();
-						listPfs.put(new PlannedFeature(f, e), new ArrayList(slotList.getDaySlots().values()));
-					}
-				}
-			}
-			List<DaySlot> daySlots = new ArrayList<>();
-			for (SlotList slotList : slotLists) daySlots.addAll(slotList.getDaySlots().values());
-			newDaySlots.put(e, daySlots);
-		}
-
-		Schedule nSchedule = new Schedule(newDaySlots);
-		setSchedule(nSchedule);
-		problem.setPreviousSchedule(new Schedule(previous));
-
-		for (PlannedFeature pf : listPfs.keySet()) {
-			forceSchedule(pf, listPfs.get(pf));
-		}
-
-	}
-
 	private void forceSchedule(PlannedFeature pf, List<DaySlot> daySlots) {
 		getSchedule().forcedSchedule(pf, daySlots);
 		undoneFeatures.remove(pf.getFeature());
@@ -238,6 +186,13 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
                 initializePlannedFeaturesWithPrecedences(nbFeaturesToDo);
         }
 		
+	}
+
+	private void initOldAndNewAgenda() {
+		this.schedule = new Schedule(problem.getSchedule());
+		for (PlannedFeature pf : problem.getListPfs().keySet()) {
+			forceSchedule(pf, problem.getListPfs().get(pf));
+		}
 	}
 
 	private double computeCriticalPath() {

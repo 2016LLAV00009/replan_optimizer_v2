@@ -138,12 +138,13 @@ private static final Logger logger = LoggerFactory.getLogger(ValidatePlanningSol
         List<DaySlot> agenda = random.getAgenda(4, 8.0);
         for (Employee e : employees) e.setCalendar(agenda);
 
-        NextReleaseProblem problem = new NextReleaseProblem(features, employees);
-        System.out.println(problem.toString());
         for (int i = 0; i < 1; ++i) {
+            NextReleaseProblem problem = new NextReleaseProblem(features, employees);
+            System.out.println(problem.toString());
             PlanningSolution solution = solver.executeNRP(problem);
             System.out.println(solution.toString());
             validator.validateAll(solution);
+
             System.out.println("*****Replanning******");
             NextReleaseProblem nextReleaseProblem =
                     new NextReleaseProblem(features, solution.getEmployees(), new DaySlot(0,2,1,8.0,0, null));

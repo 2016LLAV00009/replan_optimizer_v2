@@ -7,9 +7,12 @@ public class Schedule {
     HashMap<Employee, List<SlotList>> employeesCalendar;
     HashMap<Employee, Integer> currentSlotIds;
 
+    List<String> plannedFeatures;
+
     public Schedule(HashMap<Employee, List<DaySlot>> agenda) {
         employeesCalendar = new HashMap<>();
         currentSlotIds = new HashMap<>();
+        plannedFeatures = new ArrayList<>();
         for (Employee e : agenda.keySet()) {
             int currentSlotId = createSlotAgenda(e, agenda.get(e));
             currentSlotIds.put(e, currentSlotId);
@@ -20,8 +23,29 @@ public class Schedule {
     Copy constructor
      */
     public Schedule(Schedule origin) {
-        employeesCalendar = new HashMap<>(origin.employeesCalendar);
-        currentSlotIds = new HashMap<>(origin.currentSlotIds);
+        employeesCalendar = new HashMap<>();
+        currentSlotIds = new HashMap<>();
+        for (Employee e : origin.getEmployeesCalendar().keySet()) {
+            List<SlotList> slotLists = new ArrayList<>();
+            for (SlotList slotList : origin.getEmployeesCalendar().get(e)) {
+                LinkedHashMap<Integer, DaySlot> daySlots = new LinkedHashMap<>();
+                for (Integer id : slotList.getDaySlots().keySet()) {
+                    daySlots.put(id, new DaySlot(slotList.getDaySlot(id)));
+                }
+                slotLists.add(new SlotList(daySlots));
+            }
+            employeesCalendar.put(e, slotLists);
+            currentSlotIds.put(e, origin.getCurrentSlotIds().get(e));
+        }
+        plannedFeatures = origin.plannedFeatures;
+    }
+
+    public List<String> getPlannedFeatures() {
+        return plannedFeatures;
+    }
+
+    public void setPlannedFeatures(List<String> plannedFeatures) {
+        this.plannedFeatures = plannedFeatures;
     }
 
     public HashMap<Employee, List<SlotList>> getEmployeesCalendar() { return employeesCalendar; }
@@ -71,10 +95,12 @@ public class Schedule {
     }
 
     public boolean scheduleFeature(PlannedFeature pf, List<PlannedFeature> previousFeatures) {
-        if (pf.getSlotIds().size() > 0) {
+        if (plannedFeatures.contains(pf.getFeature().getName())) {
             return true;
         }
-        else return scheduleFeature(pf, getLatestPlannedFeature(previousFeatures));
+        else {
+            return scheduleFeature(pf, getLatestPlannedFeature(previousFeatures));
+        }
     }
 
     private DaySlot getLatestPlannedFeature(List<PlannedFeature> previousFeatures) {

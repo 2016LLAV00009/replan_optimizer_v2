@@ -36,7 +36,7 @@ public class ReplanApiController implements ReplanApi {
 
             // Convert to internal model
             NextReleaseProblem problem =
-                    new NextReleaseProblem(p.getFeatures(), p.getResources());
+                    new NextReleaseProblem(p.getFeatures(), p.getResources(), p.getReplanTime());
             //problem.setPreviousSolution(p.getPreviousSolution());
             //problem.setReplanHour(p.getReplanHour());
 

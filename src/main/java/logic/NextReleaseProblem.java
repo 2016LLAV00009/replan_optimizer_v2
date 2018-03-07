@@ -118,16 +118,90 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 
 		initializeWorstScore();
 		initializeNumberOfConstraint();
-
-		//FIXME Placeholder daySlot
-		this.replanTime = new DaySlot(0, 0, 0, 0, 0, null);
+		initOldAndNewAgenda();
 
 	}
 
 	public NextReleaseProblem(List<Feature> features, List<Employee> employees, DaySlot replanTime) {
 		this(features, employees);
-		this.replanTime = replanTime;
+		if (replanTime != null) this.replanTime = replanTime;
+		initOldAndNewAgenda();
 	}
+
+	public Schedule getSchedule() {
+		return schedule;
+	}
+
+	public void setSchedule(Schedule schedule) {
+		this.schedule = schedule;
+	}
+
+	Schedule schedule;
+
+	public HashMap<PlannedFeature, List<DaySlot>> getListPfs() {
+		return listPfs;
+	}
+
+	public void setListPfs(HashMap<PlannedFeature, List<DaySlot>> listPfs) {
+		this.listPfs = listPfs;
+	}
+
+	HashMap<PlannedFeature, List<DaySlot>> listPfs = new HashMap<>();
+
+
+	public void initOldAndNewAgenda() {
+		HashMap<Employee, List<DaySlot>> agenda = new HashMap<>();
+		HashMap<Employee, List<DaySlot>> previous = new HashMap<>();
+		for (Employee e : employees) {
+			previous.put(e, e.copyCalendar());
+			agenda.put(e, e.copyCalendar());
+		}
+
+		schedule = new Schedule(agenda);
+		previousSchedule = new Schedule(previous);
+
+		if (replanTime != null) {
+
+			HashMap<Employee, List<DaySlot>> newDaySlots = new HashMap<>();
+
+			//System.out.println(schedule.toString());
+			for (Employee e : schedule.getEmployeesCalendar().keySet()) {
+				//System.out.println("Let's check employee " + e);
+				List<SlotList> slotLists = schedule.getEmployeesCalendar().get(e);
+				for (SlotList slotList : slotLists) {
+					if (slotList.getSlotStatus().equals(SlotStatus.Used)) {
+						DaySlot beginSlot = slotList.getDaySlot(slotList.getBeginSlotId());
+						//If the slotList ends after the replan time, release it
+						//System.out.println(schedule.toString());
+						if (getReplanTime().compareByDay(beginSlot) < 0
+								|| getReplanTime().compareByDay(beginSlot) == 0 && getReplanTime().getBeginHour() <= beginSlot.getBeginHour()) {
+							for (DaySlot daySlot : slotList.getDaySlots().values()) {
+								daySlot.setStatus(SlotStatus.Free);
+								daySlot.setFeatureId(null);
+							}
+						}
+						//If the slotList ends before the replan time, schedule feature
+						else {
+							Feature f = features.stream().filter(ft -> ft.getName().equals(beginSlot.getFeature())).findFirst().get();
+							listPfs.put(new PlannedFeature(f, e), new ArrayList(slotList.getDaySlots().values()));
+						}
+					}
+				}
+				List<DaySlot> daySlots = new ArrayList<>();
+				for (SlotList slotList : slotLists) daySlots.addAll(slotList.getDaySlots().values());
+				newDaySlots.put(e, daySlots);
+			}
+
+			Schedule nSchedule = new Schedule(newDaySlots);
+			schedule = nSchedule;
+			List<String> pfs = new ArrayList<>();
+			for (PlannedFeature pf : listPfs.keySet()) pfs.add(pf.getFeature().getName());
+			schedule.setPlannedFeatures(pfs);
+			setPreviousSchedule(new Schedule(previous));
+		}
+
+	}
+
 
 	// Copy constructor
 	public NextReleaseProblem(NextReleaseProblem origin) {
@@ -205,10 +279,6 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
         //solution.setObjective(INDEX_SIMILARITY_OBJECTIVE, evaluator.similarityObjective(solution));
 
 		solutionQuality.setAttribute(solution, evaluator.newQuality(solution));
-
-	}
-
-	private void initOldAndNewAgenda(PlanningSolution solution) {
 
 	}
 
