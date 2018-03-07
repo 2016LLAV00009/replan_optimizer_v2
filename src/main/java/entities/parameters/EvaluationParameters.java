@@ -21,18 +21,24 @@ public class EvaluationParameters {
 		objectivesList = new ArrayList<>();
 		configureDefaultHighPriorityObjectives();
 		configureDefaultLowPriorityObjectives();
+		configureDefaultVeryLowPriorityObjectives();
 	}
 	
 	public EvaluationParameters(List<HashMap<Integer, Double>> objectivesList) {
 		this.objectivesList = objectivesList;
 	}
 
+	private void configureDefaultVeryLowPriorityObjectives() {
+		HashMap<Integer, Double> veryLowPriority = new HashMap<>();
+		veryLowPriority.put(similarityQuality, 1.0);
+		objectivesList.add(veryLowPriority);
+	}
+
 	private void configureDefaultLowPriorityObjectives() {
 		HashMap<Integer, Double> lowPriority = new HashMap<>();
-		lowPriority.put(endDateQuality, 0.4);
-		lowPriority.put(distributionQuality, 0.4);
-		lowPriority.put(completionQuality, 0.2);
-		lowPriority.put(similarityQuality, 0.0);
+		lowPriority.put(endDateQuality, (double)1/3);
+		lowPriority.put(distributionQuality, (double)1/3);
+		lowPriority.put(completionQuality, (double)1/3);
 		objectivesList.add(lowPriority);
 	}
 

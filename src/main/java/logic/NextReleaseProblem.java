@@ -95,7 +95,7 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 	public NextReleaseProblem() {
 		setName("Next Release Problem");
 		setNumberOfVariables(1);
-		setNumberOfObjectives(2);
+		setNumberOfObjectives(3);
 		features = new ArrayList<>();
 		numberOfViolatedConstraints = new NumberOfViolatedConstraints<>();
 		overallConstraintViolation = new OverallConstraintViolation<>();
@@ -277,7 +277,7 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 
 		solution.setObjective(INDEX_PRIORITY_OBJECTIVE, evaluator.getObjectivePerPriorityLevel(solution, 0));
         solution.setObjective(INDEX_SUBOBJECTIVES, evaluator.getObjectivePerPriorityLevel(solution,1));
-        //solution.setObjective(INDEX_SIMILARITY_OBJECTIVE, evaluator.similarityObjective(solution));
+        solution.setObjective(INDEX_SIMILARITY_OBJECTIVE, evaluator.similarityObjective(solution));
 
 		solutionQuality.setAttribute(solution, evaluator.newQuality(solution));
 

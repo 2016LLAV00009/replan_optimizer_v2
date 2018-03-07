@@ -160,38 +160,29 @@ public class SolverNRP {
         if (problem.getEvaluationParameters() == null)
         	problem.setEvaluationParameters(new EvaluationParameters());
 
-        //PlanningSolution solution = this.generatePlanningSolution(problem);
         PlanningSolution solution = this.generatePlanningSolutionWithMeasures(problem);
-        
         solution.setAnalytics(new Analytics(solution));
-
-        /*postprocess(solution);
-
-        clearSolutionIfNotValid(solution);
-
-        //FIXME added re-evaluation
-        SolutionQuality solutionQuality = new SolutionQuality();
-        problem.evaluate(solution);
-        
-        System.out.println(String.format("%f, %d/%d after postprocessing)", solutionQuality.getAttribute(solution), 
-                solution.getPlannedFeatures().size(), problem.getFeatures().size()));*/
 
         return solution;
     }
 
+    public List<PlanningSolution> executeNRPs(NextReleaseProblem problem) {
+        if (problem.getAlgorithmParameters() == null)
+            problem.setAlgorithmParameters(new AlgorithmParameters(algorithmType));
+        else
+            algorithmType = problem.getAlgorithmParameters().getAlgorithmType();
 
-    private PlanningSolution generatePlanningSolution(NextReleaseProblem problem) {
+        if (problem.getEvaluationParameters() == null)
+            problem.setEvaluationParameters(new EvaluationParameters());
 
+        return generatePlanningSolution(problem);
+    }
+
+
+    private List<PlanningSolution> generatePlanningSolution(NextReleaseProblem problem) {
         algorithm = createAlgorithm(algorithmType, problem);
-        
         new AlgorithmRunner.Executor(algorithm).execute();
-
-        List<PlanningSolution> result = algorithm.getResult();
-        PlanningSolution bestSolution = PopulationFilter.getBestSolutions(result).iterator().next();
-
-        printQuality(result, bestSolution);
-
-        return bestSolution;
+        return algorithm.getResult();
     }
     
     private static final int POPULATION_MEASURE = 0;

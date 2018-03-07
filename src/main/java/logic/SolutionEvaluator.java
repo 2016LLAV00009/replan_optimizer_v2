@@ -89,7 +89,7 @@ public class SolutionEvaluator {
                 score += 1.0 - realDiff / maxDiff;
             }
         }
-        return score / solution.getPlannedFeatures().size();
+        return 1.0 - score / solution.getPlannedFeatures().size();
     }
     
     private double objectivePriorityRange = 0.999;
