@@ -2,6 +2,6 @@ package entities;
 
 public enum SlotStatus {
 
-    Free, Used
+    Free, Used, Frozen
 
 }

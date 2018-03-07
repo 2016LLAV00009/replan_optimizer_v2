@@ -169,12 +169,13 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 				//System.out.println("Let's check employee " + e);
 				List<SlotList> slotLists = schedule.getEmployeesCalendar().get(e);
 				for (SlotList slotList : slotLists) {
-					if (slotList.getSlotStatus().equals(SlotStatus.Used)) {
+					if (slotList.getSlotStatus().equals(SlotStatus.Used) || slotList.getSlotStatus().equals(SlotStatus.Frozen)) {
 						DaySlot beginSlot = slotList.getDaySlot(slotList.getBeginSlotId());
 						//If the slotList ends after the replan time, release it
 						//System.out.println(schedule.toString());
-						if (getReplanTime().compareByDay(beginSlot) < 0
-								|| getReplanTime().compareByDay(beginSlot) == 0 && getReplanTime().getBeginHour() <= beginSlot.getBeginHour()) {
+						if ((getReplanTime().compareByDay(beginSlot) < 0
+								|| getReplanTime().compareByDay(beginSlot) == 0 && getReplanTime().getBeginHour() <= beginSlot.getBeginHour())
+								&& slotList.getSlotStatus().equals(SlotStatus.Used)) {
 							for (DaySlot daySlot : slotList.getDaySlots().values()) {
 								daySlot.setStatus(SlotStatus.Free);
 								daySlot.setFeatureId(null);
