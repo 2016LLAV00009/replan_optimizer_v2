@@ -6,6 +6,7 @@ public class Schedule {
 
     HashMap<Employee, List<SlotList>> employeesCalendar;
     HashMap<Employee, Integer> currentSlotIds;
+    DaySlot replan;
 
     List<String> plannedFeatures;
 
@@ -18,6 +19,8 @@ public class Schedule {
             currentSlotIds.put(e, currentSlotId);
         }
     }
+
+    public void setReplan(DaySlot replan) { this.replan = replan; }
 
     /*
     Copy constructor
@@ -127,7 +130,7 @@ public class Schedule {
         if (lastPreviousFeatureEndSlot == null) {
             DaySlot beginSlot = slotAgenda.getDaySlot(slotAgenda.getBeginSlotId());
             lastPreviousFeatureEndSlot = new DaySlot(-1, beginSlot.getWeek(), beginSlot.getDayOfWeek() - 1, beginSlot.getBeginHour(), beginSlot.getBeginHour(), SlotStatus.Free);
-        }
+        } if (replan.compareTo(lastPreviousFeatureEndSlot) > 0) lastPreviousFeatureEndSlot = replan;
         updateAgenda(pf, slotAgenda, lastPreviousFeatureEndSlot);
         return true;
     }
@@ -155,21 +158,23 @@ public class Schedule {
                 previousAgenda.put(daySlot.getId(), daySlot);
             }
             else if (cmp == 0) {
-                DaySlot prevDaySlot = new DaySlot(++currentSlotId, daySlot.getWeek(), daySlot.getDayOfWeek(),
-                        daySlot.getBeginHour(), lastPreviousFeatureEndSlot.getEndHour(), SlotStatus.Free);
                 //If last previous feature is ended today
-                if (lastPreviousFeatureEndSlot.getEndHour() - daySlot.getBeginHour() > 0)
+                if (lastPreviousFeatureEndSlot.getEndHour() - daySlot.getBeginHour() > 0) {
+                    DaySlot prevDaySlot = new DaySlot(++currentSlotId, daySlot.getWeek(), daySlot.getDayOfWeek(),
+                            daySlot.getBeginHour(), lastPreviousFeatureEndSlot.getEndHour(), SlotStatus.Free);
                     previousAgenda.put(currentSlotId, prevDaySlot);
+                }
 
                 if (daySlot.getEndHour() - lastPreviousFeatureEndSlot.getEndHour() > 0) {
-                    double hour = Math.min(lastPreviousFeatureEndSlot.getEndHour() + remainingHours,
+                    double begin = Math.max(lastPreviousFeatureEndSlot.getEndHour(), daySlot.getBeginHour());
+                    double hour = Math.min(begin + remainingHours,
                             daySlot.getEndHour());
                     DaySlot thisDaySlot = new DaySlot(++currentSlotId, daySlot.getWeek(), daySlot.getDayOfWeek(),
-                            lastPreviousFeatureEndSlot.getEndHour(), hour, SlotStatus.Used);
+                            begin, hour, SlotStatus.Used);
                     thisDaySlot.setFeature(pf.getFeature());
                     //If after ending previous feature there are remaining work hours
                     thisAgenda.put(currentSlotId, thisDaySlot);
-                    remainingHours -= (hour - lastPreviousFeatureEndSlot.getEndHour());
+                    remainingHours -= (hour - begin);
                     if (hour < daySlot.getEndHour()) {
                         DaySlot afterDaySlot = new DaySlot(++currentSlotId, daySlot.getWeek(), daySlot.getDayOfWeek(),
                                 hour, daySlot.getEndHour(), SlotStatus.Free);
@@ -232,7 +237,7 @@ public class Schedule {
         List<SlotList> employeeAgenda = employeesCalendar.get(pf.getEmployee());
         int i = 0;
         while (i < employeeAgenda.size()) {
-            if (employeeAgenda.get(i).isFeatureFit(pf.getFeature(), lastPreviousFeatureEndSlot)) {
+            if (employeeAgenda.get(i).isFeatureFit(pf.getFeature(), lastPreviousFeatureEndSlot, replan)) {
                 return employeeAgenda.get(i);
             }
             else ++i;

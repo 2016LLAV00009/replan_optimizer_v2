@@ -42,34 +42,33 @@ public class SlotList {
         return duration;
     }
 
-    public boolean isFeatureFit(Feature feature, DaySlot lastPreviousFeatureEndSlot) {
+    public boolean isFeatureFit(Feature feature, DaySlot lastPreviousFeatureEndSlot, DaySlot replan) {
         if (slotStatus.equals(SlotStatus.Used)) return false;
         DaySlot endDaySlot = daySlots.get(endSlotId);
         DaySlot beginDaySlot = daySlots.get(beginSlotId);
         //If any previous feature is planned after this slot, feature can't be planned
+
         if (lastPreviousFeatureEndSlot != null &&
                 lastPreviousFeatureEndSlot.compareTo(beginDaySlot) <= 0)
             return false;
+        if (lastPreviousFeatureEndSlot == null)
+            lastPreviousFeatureEndSlot = replan;
         //Otherwise, we check if feature duration fits in this slot duration
+        double freeTime = 0.0;
+        //If there is no previous feature or it has ended before the beginning of this slot
+        if (lastPreviousFeatureEndSlot.compareTo(beginDaySlot) <= 0)
+            freeTime = getTotalDuration();
+        //Otherwise
         else {
-            double freeTime = 0.0;
-            //If there is no previous feature or it has ended before the beginning of this slot
-            if (lastPreviousFeatureEndSlot == null ||
-                    lastPreviousFeatureEndSlot != null &&
-                    lastPreviousFeatureEndSlot.compareTo(beginDaySlot) <= 0)
-                freeTime = getTotalDuration();
-            //Otherwise
-            else {
-                for (DaySlot slot : daySlots.values()) {
-                    int cmp = slot.compareByDay(lastPreviousFeatureEndSlot);
-                    if (cmp == 0)
-                        freeTime += slot.getEndHour() - lastPreviousFeatureEndSlot.getEndHour();
-                    else if (cmp > 0)
-                        freeTime += slot.getDuration();
-                }
+            for (DaySlot slot : daySlots.values()) {
+                int cmp = slot.compareByDay(lastPreviousFeatureEndSlot);
+                if (cmp == 0)
+                    freeTime += slot.getEndHour() - lastPreviousFeatureEndSlot.getEndHour();
+                else if (cmp > 0)
+                    freeTime += slot.getDuration();
             }
-            return freeTime >= feature.getDuration();
         }
+        return freeTime >= feature.getDuration();
     }
 
     @Override

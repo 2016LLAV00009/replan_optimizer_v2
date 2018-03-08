@@ -118,6 +118,7 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 
 		initializeWorstScore();
 		initializeNumberOfConstraint();
+		this.replanTime = new DaySlot(0,0,0,0,0,null);
 		initOldAndNewAgenda();
 
 	}
@@ -198,6 +199,7 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 			List<String> pfs = new ArrayList<>();
 			for (PlannedFeature pf : listPfs.keySet()) pfs.add(pf.getFeature().getName());
 			schedule.setPlannedFeatures(pfs);
+
 			setPreviousSchedule(new Schedule(previous));
 		}
 
@@ -248,6 +250,9 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 
 	@Override
 	public void evaluate(PlanningSolution solution) {
+
+		replanTime.setEndHour(replanTime.getBeginHour());
+		solution.getSchedule().setReplan(replanTime);
 
 		List<PlannedFeature> plannedFeatures = solution.getPlannedFeatures();
 		for (int i = 0; i < plannedFeatures.size(); ++i) {
