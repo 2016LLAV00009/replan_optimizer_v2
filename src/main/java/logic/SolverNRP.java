@@ -182,7 +182,7 @@ public class SolverNRP {
     private List<PlanningSolution> generatePlanningSolution(NextReleaseProblem problem) {
         algorithm = createAlgorithm(algorithmType, problem);
         new AlgorithmRunner.Executor(algorithm).execute();
-        return algorithm.getResult();
+        return PopulationFilter.cleanSolutions(algorithm.getResult());
     }
     
     private static final int POPULATION_MEASURE = 0;

@@ -3,6 +3,7 @@ package io.swagger.model;
 import entities.Employee;
 import entities.Feature;
 import entities.PlannedFeature;
+import logic.NextReleaseProblem;
 import logic.PlanningSolution;
 
 import java.util.ArrayList;
@@ -17,6 +18,10 @@ import java.util.List;
  */
 public class ApiPlanningSolution {
 
+    private double priorityQuality;
+    private double performanceQuality;
+    private double similarityQuality;
+    private double globalQuality;
     private List<Employee> employees;
 
     /* --- CONSTRUCTORS --- */
@@ -26,9 +31,11 @@ public class ApiPlanningSolution {
 
     public ApiPlanningSolution(PlanningSolution solution) {
         employees = solution.getEmployees();
+        priorityQuality = solution.getObjective(NextReleaseProblem.INDEX_PRIORITY_OBJECTIVE);
+        performanceQuality = solution.getObjective(NextReleaseProblem.INDEX_SUBOBJECTIVES);
+        similarityQuality = solution.getObjective(NextReleaseProblem.INDEX_SIMILARITY_OBJECTIVE);
+        globalQuality = solution.getProblem().getSolutionQuality().getAttribute(solution);
     }
-
-
 
     /* --- GETTERS / SETTERS --- */
 
@@ -40,19 +47,35 @@ public class ApiPlanningSolution {
         this.employees = employees;
     }
 
-    /*public List<PlannedFeature> getJobs() {
-        return jobs;
+    public double getPriorityQuality() {
+        return priorityQuality;
     }
 
-    public void setJobs(List<PlannedFeature> jobs) {
-        this.jobs = jobs;
+    public void setPriorityQuality(double priorityQuality) {
+        this.priorityQuality = priorityQuality;
     }
 
-    public PlannedFeature findJobOf(Feature f) {
-        for (PlannedFeature pf : jobs)
-            if (pf.getFeature().equals(f))
-                return pf;
+    public double getPerformanceQuality() {
+        return performanceQuality;
+    }
 
-        return null;
-    }*/
+    public void setPerformanceQuality(double performanceQuality) {
+        this.performanceQuality = performanceQuality;
+    }
+
+    public double getSimilarityQuality() {
+        return similarityQuality;
+    }
+
+    public void setSimilarityQuality(double similarityQuality) {
+        this.similarityQuality = similarityQuality;
+    }
+
+    public double getGlobalQuality() {
+        return globalQuality;
+    }
+
+    public void setGlobalQuality(double globalQuality) {
+        this.globalQuality = globalQuality;
+    }
 }

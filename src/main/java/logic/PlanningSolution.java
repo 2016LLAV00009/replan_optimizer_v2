@@ -15,7 +15,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * A solution for a particular {@link NextReleaseProblem}.
  * It also includes chunks of logic which should probably go somewhere else.
  */
-public class PlanningSolution extends AbstractGenericSolution<Integer, NextReleaseProblem> {
+public class PlanningSolution extends AbstractGenericSolution<Integer, NextReleaseProblem> implements Comparable<PlanningSolution> {
 
 	private static final long serialVersionUID = 615615442782301271L; //Generated Id
 	
@@ -450,4 +450,13 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
         return new DaySlot(0, Math.floorDiv((int)computeCriticalPath, (24*7)) + 1, Math.floorDiv((int)computeCriticalPath, 24) + 1,
 				computeCriticalPath % 24, computeCriticalPath % 24, null);
     }
+
+	@Override
+	public int compareTo(PlanningSolution o) {
+		double ps1 = this.getProblem().getSolutionQuality().getAttribute(this);
+		double ps2 = o.getProblem().getSolutionQuality().getAttribute(o);
+		if (ps1 > ps2 ) return 1;
+		else if (ps1 < ps2) return -1;
+		else return 0;
+	}
 }

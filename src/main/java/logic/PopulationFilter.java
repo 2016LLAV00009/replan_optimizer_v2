@@ -49,4 +49,10 @@ public class PopulationFilter {
 		return bestSolutions;
 	}
 
+	public static List<PlanningSolution> cleanSolutions(List<PlanningSolution> result) {
+		Set<PlanningSolution> set = new HashSet<>(result);
+		List<PlanningSolution> filtered = new ArrayList<>(set);
+		Collections.sort(filtered);
+		return filtered;
+	}
 }

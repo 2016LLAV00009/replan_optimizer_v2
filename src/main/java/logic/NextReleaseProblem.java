@@ -38,9 +38,9 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 
 	private static final long serialVersionUID = 3302475694747789178L; // Generated Id
 
-    private static final int INDEX_PRIORITY_OBJECTIVE = 0; // The index of the priority score objective in the objectives list
-	private static final int INDEX_SUBOBJECTIVES = 1; // The index of the end date objective in the objectives list
-	private static final int INDEX_SIMILARITY_OBJECTIVE = 2;	// Make sure to
+    public static final int INDEX_PRIORITY_OBJECTIVE = 0; // The index of the priority score objective in the objectives list
+	public static final int INDEX_SUBOBJECTIVES = 1; // The index of the end date objective in the objectives list
+	public static final int INDEX_SIMILARITY_OBJECTIVE = 2;	// Make sure to
 	
 	private static final Logger logger = LoggerFactory.getLogger(NextReleaseProblem.class);
 
@@ -84,6 +84,8 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 	public double getWorstScore() {
 		return worstScore;
 	}
+
+	public SolutionQuality getSolutionQuality() { return solutionQuality; }
 
 	public AlgorithmParameters getAlgorithmParameters() { return algorithmParameters; }
 	public void setAlgorithmParameters(AlgorithmParameters algorithmParameters) { this.algorithmParameters = algorithmParameters; }
