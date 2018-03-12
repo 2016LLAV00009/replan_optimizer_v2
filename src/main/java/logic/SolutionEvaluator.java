@@ -34,8 +34,7 @@ public class SolutionEvaluator {
         Schedule schedule = solution.getSchedule();
         DaySlot planEndDaySlot = schedule.getEndDaySlot(SlotStatus.Used);
         DaySlot worstEndDaySlot = schedule.getEndDaySlot(null);
-        DaySlot minEndDaySlot = solution.getCriticalEndSlot();
-        return Math.min(0.0, ((double) planEndDaySlot.compareTo(minEndDaySlot)) / (double) worstEndDaySlot.compareTo(minEndDaySlot));
+        return Math.min(0.0,  planEndDaySlot.getTime() /  worstEndDaySlot.getTime());
     }
     
     public double distributionObjective(PlanningSolution solution) {
@@ -118,7 +117,7 @@ public class SolutionEvaluator {
                     break;
             }
         }
-        double max = objectivePriorityRange / Math.pow(10, i*3);
+        double max = objectivePriorityRange ;
         return score * max;
     }
 
@@ -131,7 +130,7 @@ public class SolutionEvaluator {
         double quality = 0.0;
 
         for (int i = 0; i < priorityLevels; ++i) {
-            quality += getObjectivePerPriorityLevel(solution, i);
+            quality += getObjectivePerPriorityLevel(solution, i) / Math.pow(10, i*3);
         }
 
        /* System.out.println("****");

@@ -194,6 +194,7 @@ public class RandomThings {
         List<Employee> employees = employeeList(nEmployees);
 
         mix(features, skills, employees);
+        for (Employee e : employees) e.setCalendar(getAgenda(nWeeks, hoursPerWeek/5));
 
         validator.validateNoUnassignedSkills(skills, employees);
 

@@ -2,6 +2,7 @@ package logic.test;
 import entities.parameters.AlgorithmParameters;
 import logic.NextReleaseProblem;
 import logic.PlanningSolution;
+import logic.SolutionEvaluator;
 import logic.SolverNRP;
 import logic.analytics.PerformanceCharts;
 
@@ -126,16 +127,16 @@ public class AlgorithmPerformanceTest {
     @Test
     @Ignore
     public void populationSizeTest() {
-        for (int k = 0; k < 5; ++k) {
-            NextReleaseProblem base = random.all(7, 20, 5, 4, 40.0);
+        for (int k = 0; k < 1; ++k) {
+            NextReleaseProblem base = random.all(5, 20, 3, 2, 40.0);
             SolverNRP solver = new SolverNRP(SolverNRP.AlgorithmType.NSGAII);
 
             List<Integer> populationSize = new ArrayList<>();
-            List<Double> executionTime = new ArrayList<>();
+            List<Double> quality = new ArrayList<>();
             List<Integer> plannedFeatures = new ArrayList<>();
-            for (int i = 0; i < 15; ++i) {
+            for (int i = 0; i < 100; ++i) {
                 AlgorithmParameters params = new AlgorithmParameters(SolverNRP.AlgorithmType.NSGAII);
-                params.setPopulationSize(params.getPopulationSize() + ++i * 10);
+                params.setPopulationSize((i+1));
 
                 NextReleaseProblem problem = new NextReleaseProblem(base);
                 problem.setAlgorithmParameters(params);
@@ -145,12 +146,50 @@ public class AlgorithmPerformanceTest {
                 long elapsed = System.currentTimeMillis() - start;
 
                 populationSize.add(params.getPopulationSize());
-                executionTime.add(elapsed / 1000.0);
+                quality.add(SolutionEvaluator.getInstance().newQuality(solution));
                 plannedFeatures.add(solution.size());
             }
 
-            PerformanceCharts.generatePopulationChart(solver, populationSize, executionTime, plannedFeatures);
+            PerformanceCharts.generatePopulationChart(solver, populationSize, quality, plannedFeatures,
+                    "Population/Quality chart", "Population size", "Quality", "Nb Planned Features" );
             
+           /* XYChart chart = new XYChartBuilder().width(1024).height(512).title("Population/Performance chart")
+                    .xAxisTitle("Population size").build();
+            chart.addSeries("Execution time (seconds)", populationSize, executionTime);
+            chart.addSeries("Number of planned features", populationSize, plannedFeatures);
+
+            saveChart(chart, String.format("PopulationSizeTest_%s_%s", algorithmName(solver), timestamp()));*/
+        }
+    }
+
+    @Test
+    public void iterationsTest() {
+        for (int k = 0; k < 1; ++k) {
+            NextReleaseProblem base = random.all(5, 20, 3, 2, 40.0);
+            SolverNRP solver = new SolverNRP(SolverNRP.AlgorithmType.NSGAII);
+
+            List<Integer> iterationSize = new ArrayList<>();
+            List<Double> quality = new ArrayList<>();
+            List<Integer> plannedFeatures = new ArrayList<>();
+            for (int i = 0; i < 200; ++i) {
+                AlgorithmParameters params = new AlgorithmParameters(SolverNRP.AlgorithmType.NSGAII);
+                params.setNumberOfIterations(500*(i+1));
+
+                NextReleaseProblem problem = new NextReleaseProblem(base);
+                problem.setAlgorithmParameters(params);
+
+                long start = System.currentTimeMillis();
+                PlanningSolution solution = execute(problem, solver);
+                long elapsed = System.currentTimeMillis() - start;
+
+                iterationSize.add(params.getNumberOfIterations());
+                quality.add(SolutionEvaluator.getInstance().newQuality(solution));
+                plannedFeatures.add(solution.size());
+            }
+
+            PerformanceCharts.generatePopulationChart(solver, iterationSize, quality, plannedFeatures,
+                    "Population/Quality chart", "Iterations", "Quality", "Nb Planned Features");
+
            /* XYChart chart = new XYChartBuilder().width(1024).height(512).title("Population/Performance chart")
                     .xAxisTitle("Population size").build();
             chart.addSeries("Execution time (seconds)", populationSize, executionTime);

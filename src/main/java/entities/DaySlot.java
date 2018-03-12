@@ -95,4 +95,7 @@ public class DaySlot implements Comparable<DaySlot> {
                 + " | endHour: " + endHour + " | status: " + status;
     }
 
+    public double getTime() {
+        return this.week*7*24 + this.dayOfWeek*24 + this.beginHour;
+    }
 }

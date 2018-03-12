@@ -39,11 +39,12 @@ public class PerformanceCharts {
 	}
 	
 	public static void generatePopulationChart(SolverNRP solver, List<Integer> populationSize, 
-			List<Double> executionTime, List<Integer> plannedFeatures) {
-		XYChart chart = new XYChartBuilder().width(1024).height(512).title("Population/Performance chart")
-                .xAxisTitle("Population size").build();
-        chart.addSeries("Execution time (seconds)", populationSize, executionTime);
-        chart.addSeries("Number of planned features", populationSize, plannedFeatures);
+			List<Double> executionTime, List<Integer> plannedFeatures,
+            String title, String var, String serie1, String serie2) {
+		XYChart chart = new XYChartBuilder().width(1024).height(512).title(title)
+                .xAxisTitle(var).build();
+        chart.addSeries(serie1, populationSize, executionTime);
+        //chart.addSeries(serie2, populationSize, plannedFeatures);
 
         saveChart(chart, String.format("PopulationSizeTest_%s_%s", algorithmName(solver), timestamp()));
 	}

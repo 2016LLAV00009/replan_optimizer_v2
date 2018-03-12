@@ -24,7 +24,16 @@ public interface ReplanApi {
     @RequestMapping(value = "/replan",
         produces = { "application/json" }, 
         method = RequestMethod.POST)
-
     ResponseEntity<String> replan(HttpServletRequest request);
+
+    @ApiOperation(value = "Generates a set of Planning Solutions for a given Next Release Problem", notes = "", response = String.class, tags={  })
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Success", response = String.class),
+            @ApiResponse(code = 400, message = "Bad Request", response = String.class),
+            @ApiResponse(code = 422, message = "Unprocessable Entity", response = String.class) })
+    @RequestMapping(value = "/replan-n",
+            produces = { "application/json" },
+            method = RequestMethod.POST)
+    ResponseEntity<String> replanMultipleSolutions(HttpServletRequest request);
 
 }
