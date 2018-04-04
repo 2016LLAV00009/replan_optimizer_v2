@@ -137,7 +137,9 @@ public class PlannedFeature {
 		PlannedFeature other = (PlannedFeature) obj;
 
 		return other.getFeature().equals(this.getFeature()) &&
-				other.getEmployee().equals(this.getEmployee());
+				other.getEmployee().equals(this.getEmployee()) &&
+				other.getBeginHour() == this.getBeginHour() &&
+				other.getEndHour() == this.getEndHour();
 				//other.getBeginHour() == this.getBeginHour() &&
 				//other.getEndHour() == this.getEndHour();
 	}
