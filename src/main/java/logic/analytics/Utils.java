@@ -59,7 +59,7 @@ public class Utils {
 
     public List<Employee> doableBy(Feature f) {
         return problem.getEmployees().stream()
-                .filter(e -> e.getSkills().containsAll(f.getRequiredSkills()))
+                .filter(e -> e.getSkills().keySet().containsAll(f.getRequiredSkills()))
                 .collect(Collectors.toList());
     }
 
@@ -67,7 +67,7 @@ public class Utils {
     /* --- EMPLOYEES --- */
     public List<Feature> doableFeatures(Employee e) {
         return problem.getFeatures().stream()
-                .filter(f -> e.getSkills().containsAll(f.getRequiredSkills()))
+                .filter(f -> e.getSkills().keySet().containsAll(f.getRequiredSkills()))
                 .collect(Collectors.toList());
     }
 

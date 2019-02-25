@@ -11,8 +11,9 @@ public class EvaluationParameters {
 	public static final int distributionQuality = 2;
 	public static final int priorityQuality = 3;
 	public static final int similarityQuality = 4;
-	
-	/**
+	public static final int skilledQuality = 5;
+
+    /**
 	 * An ordered list with the set of objective weights grouped by priority (key) 
 	 */
 	private List<HashMap<Integer, Double>> objectivesList;
@@ -21,7 +22,7 @@ public class EvaluationParameters {
 		objectivesList = new ArrayList<>();
 		configureDefaultHighPriorityObjectives();
 		configureDefaultLowPriorityObjectives();
-		configureDefaultVeryLowPriorityObjectives();
+//		configureDefaultVeryLowPriorityObjectives();
 	}
 	
 	public EvaluationParameters(List<HashMap<Integer, Double>> objectivesList) {
@@ -36,15 +37,15 @@ public class EvaluationParameters {
 
 	private void configureDefaultLowPriorityObjectives() {
 		HashMap<Integer, Double> lowPriority = new HashMap<>();
-		lowPriority.put(endDateQuality, (double)1/3);
-		lowPriority.put(distributionQuality, (double)1/3);
-		lowPriority.put(completionQuality, (double)1/3);
+//		lowPriority.put(endDateQuality, (double)1/3);
+//		lowPriority.put(distributionQuality, (double)1/3);
+//		lowPriority.put(completionQuality, (double)1/3);
 		objectivesList.add(lowPriority);
 	}
 
 	private void configureDefaultHighPriorityObjectives() {
 		HashMap<Integer, Double> highPriority = new HashMap<>();
-		highPriority.put(priorityQuality, 1.0);
+		highPriority.put(skilledQuality, 1.0);
 		objectivesList.add(highPriority);
 	}
 	

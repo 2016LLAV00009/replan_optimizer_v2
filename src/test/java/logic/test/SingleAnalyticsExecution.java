@@ -46,20 +46,20 @@ public class SingleAnalyticsExecution {
         List<Employee> employees = random.employeeList(4);
 
         // resource skills
-        employees.get(0).getSkills().add(skills.get(0));
-        employees.get(0).getSkills().add(skills.get(3));
+        employees.get(0).getSkills().put(skills.get(0).getName(), 1.0);
+        employees.get(0).getSkills().put(skills.get(3).getName(), 1.0);
 
-        employees.get(1).getSkills().add(skills.get(0));
-        employees.get(1).getSkills().add(skills.get(1));
-        employees.get(1).getSkills().add(skills.get(3));
+        employees.get(1).getSkills().put(skills.get(0).getName(), 1.0);
+        employees.get(1).getSkills().put(skills.get(1).getName(), 1.0);
+        employees.get(1).getSkills().put(skills.get(3).getName(), 1.0);
 
-        employees.get(2).getSkills().add(skills.get(0));
-        employees.get(2).getSkills().add(skills.get(1));
-        employees.get(2).getSkills().add(skills.get(2));
+        employees.get(2).getSkills().put(skills.get(0).getName(), 1.0);
+        employees.get(2).getSkills().put(skills.get(1).getName(), 1.0);
+        employees.get(2).getSkills().put(skills.get(2).getName(), 1.0);
 
-        employees.get(3).getSkills().add(skills.get(2));
-        employees.get(3).getSkills().add(skills.get(4));
-        employees.get(3).getSkills().add(skills.get(3));
+        employees.get(3).getSkills().put(skills.get(2).getName(), 1.0);
+        employees.get(3).getSkills().put(skills.get(4).getName(), 1.0);
+        employees.get(3).getSkills().put(skills.get(3).getName(), 1.0);
 
         // dependencies
         //features.get(3).getPreviousFeatures().add(features.get(0));

@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 // TODO: The Frozen Features functionality needs to be remade to adapt it to the NewSchedule class
@@ -74,7 +75,7 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 	public List<Employee> getSkilledEmployees(List<Skill> reqSkills) {
 		ArrayList<Employee> skilledEmployees = new ArrayList<>();
 		for (Employee employee : employees)
-			if(employee.getSkills().containsAll(reqSkills))
+			if(employee.getSkills().keySet().containsAll(reqSkills.stream().map(Skill::getName).collect(Collectors.toList())))
 				skilledEmployees.add(employee);
 		return skilledEmployees;
 	}
@@ -332,23 +333,23 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 		}*/
 
 		// Check if the employees assigned to the planned features have the required skills
-		for (PlannedFeature plannedFeature : solution.getPlannedFeatures()) {
-			List<Skill> featureSkills = plannedFeature.getFeature().getRequiredSkills();
-			List<Skill> employeeSkills = plannedFeature.getEmployee().getSkills();
-			for (Skill featureSkill : featureSkills) {
-				boolean hasSkill = false;
-				for (Skill employeeSkill : employeeSkills) {
-					if (featureSkill.equals(employeeSkill)) {
-						hasSkill = true;
-						break;
-					}
-				}
-				if (!hasSkill) {
-					violatedConstraints++;
-					overall -= 1.0;
-				}
-			}
-		}
+//		for (PlannedFeature plannedFeature : solution.getPlannedFeatures()) {
+//			List<Skill> featureSkills = plannedFeature.getFeature().getRequiredSkills();
+//			List<Skill> employeeSkills = plannedFeature.getEmployee().getSkills();
+//			for (Skill featureSkill : featureSkills) {
+//				boolean hasSkill = false;
+//				for (Skill employeeSkill : employeeSkills) {
+//					if (featureSkill.equals(employeeSkill)) {
+//						hasSkill = true;
+//						break;
+//					}
+//				}
+//				if (!hasSkill) {
+//					violatedConstraints++;
+//					overall -= 1.0;
+//				}
+//			}
+//		}
 
 		//FIXME alternate check
 		/*if (prevSolution != null) {

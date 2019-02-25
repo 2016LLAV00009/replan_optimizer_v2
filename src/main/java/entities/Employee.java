@@ -5,6 +5,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -15,7 +16,7 @@ import java.util.List;
 public class Employee {
 
 	private String name;
-	private List<Skill> skills;
+	private HashMap<String, Double> skills;
 	private List<DaySlot> calendar;
 	
 	/* --- GETTERS / SETTERS --- */
@@ -27,10 +28,10 @@ public class Employee {
 		this.name = name;
 	}
 
-	@ApiModelProperty(value = "") public List<Skill> getSkills() {
+	@ApiModelProperty(value = "") public HashMap<String, Double> getSkills() {
 		return skills;
 	}
-	public void setSkills(List<Skill> skills) {
+	public void setSkills(HashMap<String, Double> skills) {
 		this.skills = skills;
 	}
 
@@ -40,17 +41,17 @@ public class Employee {
 	/* --- CONSTRUCTORS --- */
 
 	public Employee() {
-        skills = new ArrayList<>();
+        skills = new HashMap<>();
     }
 
-	public Employee(String name, List<Skill> skills) {
+	public Employee(String name, HashMap<String, Double> skills) {
 		this.name = name;
-		this.skills = skills == null ? new ArrayList<Skill>() : skills;
+		this.skills = skills == null ? new HashMap<>() : skills;
 	}
 
-	public Employee(String name, List<Skill> skills, List<DaySlot> calendar) {
+	public Employee(String name, HashMap<String, Double> skills, List<DaySlot> calendar) {
 		this.name = name;
-		this.skills = skills == null ? new ArrayList<Skill>() : skills;
+		this.skills = skills == null ? new HashMap<>() : skills;
 		this.calendar = calendar;
 	}
 
@@ -58,8 +59,8 @@ public class Employee {
 	@Override 
 	public String toString() {
 		List<String> skillNames = new ArrayList<>();
-		for (Skill s : getSkills())
-			skillNames.add(s.getName());
+		for (String s : getSkills().keySet())
+			skillNames.add(s);
 
 		return String.format("%s. Skills: [%s].", getName(), String.join(", ", skillNames));
 	}

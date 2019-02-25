@@ -87,8 +87,8 @@ public class ValidatePlanningSolutionTest {
 		List<Employee> employees = random.employeeList(2);
         List<Feature> features = random.featureList(2);
 
-        employees.get(0).getSkills().add(skills.get(0));
-        employees.get(1).getSkills().add(skills.get(1));
+        employees.get(0).getSkills().put(skills.get(0).getName(),1.0);
+        employees.get(1).getSkills().put(skills.get(1).getName(),1.0);
         
         features.get(0).getRequiredSkills().add(skills.get(0));
         features.get(1).getRequiredSkills().add(skills.get(1));
@@ -118,7 +118,7 @@ public class ValidatePlanningSolutionTest {
 		Employee e1 = random.employee();
         List<Feature> features = new ArrayList<>();
 
-        e1.getSkills().add(s1);
+        e1.getSkills().put(s1.getName(), 1.0);
 
         NextReleaseProblem problem = new NextReleaseProblem(features, asList(e1));
         PlanningSolution solution = solver.executeNRP(problem);
@@ -156,7 +156,7 @@ public class ValidatePlanningSolutionTest {
         Employee e = random.employee();
 
         f.getRequiredSkills().addAll(skills);
-        e.getSkills().add(skills.get(0));
+        e.getSkills().put(skills.get(0).getName(),1.0);
 
         NextReleaseProblem problem = new NextReleaseProblem(asList(f), asList(e));
         PlanningSolution solution = solver.executeNRP(problem);
@@ -182,8 +182,8 @@ public class ValidatePlanningSolutionTest {
         f0.getRequiredSkills().add(s1);
         f1.getRequiredSkills().add(s1);
 
-        employees.get(0).getSkills().add(s1);
-        employees.get(1).getSkills().add(s1);
+        employees.get(0).getSkills().put(s1.getName(),1.0);
+        employees.get(1).getSkills().put(s1.getName(),1.0);
 
         f0.getPreviousFeatures().add(f1);
         f1.getPreviousFeatures().add(f0);
@@ -204,7 +204,7 @@ public class ValidatePlanningSolutionTest {
         Feature f1 = random.feature();
         Employee e1 = random.employee();
 
-        e1.getSkills().add(s1);
+        e1.getSkills().put(s1.getName(),1.0);
 
         f1.getRequiredSkills().add(s1);
 
@@ -226,7 +226,7 @@ public class ValidatePlanningSolutionTest {
         Feature f1 = random.feature();
         Employee e1 = random.employee();
 
-        e1.getSkills().add(s1);
+        e1.getSkills().put(s1.getName(),1.0);
         e1.setCalendar(random.getAgenda(1, 8.0));
 
         f1.getRequiredSkills().add(s1);
@@ -248,7 +248,7 @@ public class ValidatePlanningSolutionTest {
         List<Feature> features = random.featureList(5);
         Employee e1 = random.employee();
 
-        e1.getSkills().add(s1);
+        e1.getSkills().put(s1.getName(),1.0);
         double duration = 0.0;
         for (Feature f : features) {
         	f.getRequiredSkills().add(s1);
@@ -277,7 +277,7 @@ public class ValidatePlanningSolutionTest {
         for (int i = 0; i < features.size(); ++i) {
         	max = Math.max(max, features.get(i).getDuration());
         	features.get(i).getRequiredSkills().add(s1);
-        	employees.get(i).getSkills().add(s1);
+        	employees.get(i).getSkills().put(s1.getName(),1.0);
         }
         
         NextReleaseProblem problem = new NextReleaseProblem(features, employees);
@@ -304,7 +304,7 @@ public class ValidatePlanningSolutionTest {
         	duration += f.getDuration();
         }
         
-        e1.getSkills().add(s1);
+        e1.getSkills().put(s1,1.0);
         
         double maxEndDate = duration/2;
         //int nbWeeks = Math.max((int)(maxEndDate/e1.getWeekAvailability()), 1);
@@ -337,7 +337,7 @@ public class ValidatePlanningSolutionTest {
         List<Feature> features = random.featureList(20);
         List<Employee> employees = random.employeeList(1);
 
-        employees.get(0).getSkills().add(s1);
+        employees.get(0).getSkills().put(s1.getName(),1.0);
 
         for (int i = 0; i < features.size(); ++i) features.get(i).getRequiredSkills().add(s1);
         for (int i = 1; i < features.size(); ++i) features.get(i).getPreviousFeatures().add(features.get(i-1));
@@ -359,7 +359,7 @@ public class ValidatePlanningSolutionTest {
         Employee e = random.employee();
         Skill s = random.skill();
 
-        e.getSkills().add(s);
+        e.getSkills().put(s.getName(), 1.0);
 
         NextReleaseProblem problem = new NextReleaseProblem(asList(f), asList(e));
         PlanningSolution solution = solver.executeNRP(problem);
@@ -396,11 +396,11 @@ public class ValidatePlanningSolutionTest {
         List<Employee> employees = random.employeeList(2);
 
         // 1 employee with 1 skill
-        employees.get(0).getSkills().add(skills.get(0));
+        employees.get(0).getSkills().put(skills.get(0).getName(),1.0);
 
         // 1 employee with 2 skills
-        employees.get(1).getSkills().add(skills.get(0));
-        employees.get(1).getSkills().add(skills.get(1));
+        employees.get(1).getSkills().put(skills.get(0).getName(),1.0);
+        employees.get(1).getSkills().put(skills.get(1).getName(),1.0);
 
         // 1 feature requires 2 skills
         features.get(0).getRequiredSkills().add(skills.get(0));

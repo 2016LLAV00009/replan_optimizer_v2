@@ -113,12 +113,43 @@ public class SolutionEvaluator {
                     break;
                 case EvaluationParameters.similarityQuality:
                     score += similarityObjective(solution) * objectives.get(objectiveIndex);
+                case EvaluationParameters.skilledQuality:
+                    score += skilledObjective(solution) * objectives.get(objectiveIndex);
                 default:
                     break;
             }
         }
         double max = objectivePriorityRange ;
         return score * max;
+    }
+
+    private double skilledObjective(PlanningSolution solution) {
+
+        Double solutionAdequateness = 0.;
+        Integer total = 0;
+        for (Employee e : solution.getEmployees()) {
+            List<PlannedFeature> features = solution.getFeaturesDoneBy(e);
+            Double employeeAdequateness = 0.;
+            for (PlannedFeature pf : features) {
+                ++total;
+                Feature f = pf.getFeature();
+
+                Double featureAdequateness = 0.;
+
+                List<Skill> requiredSkills = f.getRequiredSkills();
+                for (Skill s : requiredSkills) {
+                    Double weight = e.getSkills().get(s.getName());
+                    if (weight != null) featureAdequateness += weight;
+                    else featureAdequateness += 0.;
+                }
+
+                featureAdequateness /= requiredSkills.size();
+                employeeAdequateness += featureAdequateness;
+            }
+            solutionAdequateness += employeeAdequateness;
+        }
+        Double score = solutionAdequateness / total;
+        return 1.0 - score;
     }
 
     /* --- NEW QUALITY --- */

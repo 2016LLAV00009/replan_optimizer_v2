@@ -14,7 +14,6 @@ public class Skill {
 
 	private String name;
 	
-	
 	/* --- Getters and setters --- */
 
 	@ApiModelProperty(value = "")

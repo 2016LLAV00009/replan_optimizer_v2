@@ -83,7 +83,7 @@ public class RandomThings {
 	}
 
     public Employee employee() {
-        Employee e = new Employee(String.format("E%03d", ++employeeID), new ArrayList<>());
+        Employee e = new Employee(String.format("E%03d", ++employeeID), new HashMap<>());
         e.setCalendar(getAgenda(4  , 8.0));
         return e;
     }
@@ -225,8 +225,8 @@ public class RandomThings {
             if (shouldMutate()) {
                 Employee e = employees.get(random.nextInt(0, employees.size() - 1));
 
-                if (!e.getSkills().contains(s)) {
-                    e.getSkills().add(s);
+                if (!e.getSkills().keySet().contains(s)) {
+                    e.getSkills().put(s.getName(),1.0);
                     assignedSkills.add(s);
                 }
             }
@@ -234,7 +234,7 @@ public class RandomThings {
         for (Employee e : employees) {
             if (e.getSkills().isEmpty()) {
                 Skill s = skills.get(random.nextInt(0, skills.size() - 1));
-                e.getSkills().add(s);
+                e.getSkills().put(s.getName(),1.0);
                 assignedSkills.add(s);
             }
         }
@@ -242,7 +242,7 @@ public class RandomThings {
         for (Skill s : skills) {
             if (!assignedSkills.contains(s)) {
                 Employee e = employees.get(random.nextInt(0, employees.size() - 1));
-                e.getSkills().add(s);
+                e.getSkills().put(s.getName(),1.0);
                 assignedSkills.add(s);
             }
         }

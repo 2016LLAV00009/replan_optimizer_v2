@@ -67,11 +67,11 @@ public class ParameterizedNRP {
 			
 			for (int j = 0; j < nbSkills; ++j) {
 				if (jRandom.nextDouble(0,1.0) <= skillEmployeeRates[j]) 
-					e.getSkills().add(skills.get(j));
+					e.getSkills().put(skills.get(j).getName(),1.0);
 			}
 			if (e.getSkills().size() == 0){
 				int index = findMaxProbable(skillEmployeeRates);
-				e.getSkills().add(skills.get(index));
+				e.getSkills().put(skills.get(index).getName(),1.0);
 			}
 		}
 		
