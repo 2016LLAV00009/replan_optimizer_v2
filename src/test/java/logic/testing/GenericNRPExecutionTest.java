@@ -26,47 +26,47 @@ import logic.test.Validator;
 
 public class GenericNRPExecutionTest {
 
-private static final Logger logger = LoggerFactory.getLogger(ValidatePlanningSolutionTest.class);
-	
-	private static SolverNRP solver;
-	private static RandomThings random;
+    private static final Logger logger = LoggerFactory.getLogger(ValidatePlanningSolutionTest.class);
+
+    private static SolverNRP solver;
+    private static RandomThings random;
     private static Validator validator;
-	
-	@BeforeClass
+
+    @BeforeClass
     public static void setUpBeforeClass() {
-		logger.info("Set up...");
+        logger.info("Set up...");
         solver = new SolverNRP(SolverNRP.AlgorithmType.NSGAII);
         random = new RandomThings();
         validator = new Validator();
         logger.info("NRP solver initialized with " + solver.getAlgorithmType() + " algorithm type");
     }
-	
+
     /**
      * An average use case
      */
-	@Test
+    @Test
     public void averageUseCaseTest() {
         List<Skill> skills = random.skillList(5);
         List<Feature> features = random.featureList(20);
         List<Employee> employees = random.employeeList(4);
 
         // resource skills
-        employees.get(0).getSkills().put(skills.get(0).getName(),1.0);
-        employees.get(0).getSkills().put(skills.get(3).getName(),1.0);
+        employees.get(0).getSkills().add(skills.get(0));
+        employees.get(0).getSkills().add(skills.get(3));
 
-        employees.get(1).getSkills().put(skills.get(0).getName(),1.0);
-        employees.get(1).getSkills().put(skills.get(1).getName(),1.0);
-        employees.get(1).getSkills().put(skills.get(3).getName(),1.0);
+        employees.get(1).getSkills().add(skills.get(0));
+        employees.get(1).getSkills().add(skills.get(1));
+        employees.get(1).getSkills().add(skills.get(3));
 
-        employees.get(2).getSkills().put(skills.get(0).getName(),1.0);
-        employees.get(2).getSkills().put(skills.get(1).getName(),1.0);
-        employees.get(2).getSkills().put(skills.get(2).getName(),1.0);
+        employees.get(2).getSkills().add(skills.get(0));
+        employees.get(2).getSkills().add(skills.get(1));
+        employees.get(2).getSkills().add(skills.get(2));
 
-        employees.get(3).getSkills().put(skills.get(2).getName(),1.0);
-        employees.get(3).getSkills().put(skills.get(4).getName(),1.0);
-        employees.get(3).getSkills().put(skills.get(3).getName(),1.0);
+        employees.get(3).getSkills().add(skills.get(2));
+        employees.get(3).getSkills().add(skills.get(4));
+        employees.get(3).getSkills().add(skills.get(3));
 
-       // employees.get(3).setWeekAvailability(1.0);
+        // employees.get(3).setWeekAvailability(1.0);
 
         // dependencies
         //features.get(3).getPreviousFeatures().add(features.get(0));
@@ -150,13 +150,13 @@ private static final Logger logger = LoggerFactory.getLogger(ValidatePlanningSol
                     new NextReleaseProblem(features, solution.getEmployees(), new DaySlot(0,2,1,8.0,0, null));
             PlanningSolution replan = solver.executeNRP(nextReleaseProblem);
             System.out.println(replan.toString());
-           // System.out.println(replan.getSchedule().toString());
+            // System.out.println(replan.getSchedule().toString());
             /*Analytics analytics = new Analytics(solution);
             solutionToDataFile(solution);*/
         }
     }
-	
-	private void solutionToDataFile(PlanningSolution solution) {
+
+    private void solutionToDataFile(PlanningSolution solution) {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
 
         String base = "src/test/data";
@@ -173,5 +173,5 @@ private static final Logger logger = LoggerFactory.getLogger(ValidatePlanningSol
             e.printStackTrace();
         }
     }
-	
+
 }

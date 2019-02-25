@@ -16,7 +16,7 @@ import java.util.List;
 public class Employee {
 
 	private String name;
-	private HashMap<String, Double> skills;
+	private List<Skill> skills;
 	private List<DaySlot> calendar;
 	
 	/* --- GETTERS / SETTERS --- */
@@ -28,10 +28,10 @@ public class Employee {
 		this.name = name;
 	}
 
-	@ApiModelProperty(value = "") public HashMap<String, Double> getSkills() {
+	@ApiModelProperty(value = "") public List<Skill> getSkills() {
 		return skills;
 	}
-	public void setSkills(HashMap<String, Double> skills) {
+	public void setSkills(List<Skill> skills) {
 		this.skills = skills;
 	}
 
@@ -41,17 +41,17 @@ public class Employee {
 	/* --- CONSTRUCTORS --- */
 
 	public Employee() {
-        skills = new HashMap<>();
+        skills = new ArrayList<>();
     }
 
-	public Employee(String name, HashMap<String, Double> skills) {
+	public Employee(String name, List skills) {
 		this.name = name;
-		this.skills = skills == null ? new HashMap<>() : skills;
+		this.skills = skills == null ? new ArrayList<>() : skills;
 	}
 
-	public Employee(String name, HashMap<String, Double> skills, List<DaySlot> calendar) {
+	public Employee(String name, List skills, List<DaySlot> calendar) {
 		this.name = name;
-		this.skills = skills == null ? new HashMap<>() : skills;
+		this.skills = skills == null ? new ArrayList<>() : skills;
 		this.calendar = calendar;
 	}
 
@@ -59,8 +59,8 @@ public class Employee {
 	@Override 
 	public String toString() {
 		List<String> skillNames = new ArrayList<>();
-		for (String s : getSkills().keySet())
-			skillNames.add(s);
+		for (Skill s : getSkills())
+			skillNames.add(s.getName());
 
 		return String.format("%s. Skills: [%s].", getName(), String.join(", ", skillNames));
 	}

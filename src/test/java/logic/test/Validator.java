@@ -57,7 +57,7 @@ public class Validator {
 
             for (Skill s : f.getRequiredSkills()) {
                 assertTrue(String.format(SKILL_FAIL_MESSAGE, f.toString(), s.toString(), e.toString()),
-                        e.getSkills().keySet().contains(s));
+                        e.getSkills().contains(s));
             }
         }
     }
@@ -86,8 +86,8 @@ public class Validator {
     public void validateNoUnassignedSkills(List<Skill> skills, List<Employee> employees) {
         Set<Skill> assignedSkills = new HashSet<>();
         for (Employee e : employees)
-            for (String s : e.getSkills().keySet())
-                assignedSkills.add(new Skill(s));
+            for (Skill s : e.getSkills())
+                assignedSkills.add(s);
 
         for (Skill s : skills)
             Assert.assertTrue(assignedSkills.contains(s));

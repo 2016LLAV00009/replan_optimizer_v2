@@ -7,6 +7,8 @@ import io.swagger.model.ApiPlanningSolution;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 /**
  * Created by kredes on 22/06/2017.
@@ -138,7 +140,7 @@ public class SolutionEvaluator {
 
                 List<Skill> requiredSkills = f.getRequiredSkills();
                 for (Skill s : requiredSkills) {
-                    Double weight = e.getSkills().get(s.getName());
+                    Double weight = e.getSkills().stream().filter(es -> es.getName().equals(s.getName())).collect(Collectors.toList()).get(0).getWeight();
                     if (weight != null) featureAdequateness += weight;
                     else featureAdequateness += 0.;
                 }

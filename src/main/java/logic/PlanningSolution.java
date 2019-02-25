@@ -395,10 +395,10 @@ public class PlanningSolution extends AbstractGenericSolution<Integer, NextRelea
             sb.append("  d$resources[nrow(d$resources)+1,] <- c(")
                     .append(quote(e.getName())).append(", ") // id
                     .append(quote(e.getName())).append(", "); // content
-            for(String s : e.getSkills().keySet())
+            for(Skill s : e.getSkills())
                 sb.append("  d$skillsGraphEdges[nrow(d$skillsGraphEdges)+1,] <- c(")
                         .append(quote(e.getName())).append(", ")
-                        .append(quote(s)).append(")").append(lineSeparator);
+                        .append(quote(s.getName())).append(")").append(lineSeparator);
         }
 
 		sb.append(lineSeparator);

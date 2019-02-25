@@ -75,7 +75,7 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 	public List<Employee> getSkilledEmployees(List<Skill> reqSkills) {
 		ArrayList<Employee> skilledEmployees = new ArrayList<>();
 		for (Employee employee : employees)
-			if(employee.getSkills().keySet().containsAll(reqSkills.stream().map(Skill::getName).collect(Collectors.toList())))
+			if(employee.getSkills().containsAll(reqSkills))
 				skilledEmployees.add(employee);
 		return skilledEmployees;
 	}
@@ -276,7 +276,7 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 			for (SlotList slotList : solution.getSchedule().getEmployeesCalendar().get(e)) {
 				daySlots.addAll(slotList.getDaySlots().values());
 			}
-			solutionEmployees.add(new Employee(e.getName(), e.getSkills(), daySlots));
+			solutionEmployees.add(new Employee(e.getName(), new ArrayList<>(e.getSkills()), daySlots));
 		}
 		solution.setEmployees(solutionEmployees);
 

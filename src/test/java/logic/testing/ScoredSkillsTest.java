@@ -39,16 +39,14 @@ public class ScoredSkillsTest {
 //            System.out.println(planningSolution.toString());
 //        }
         Skill s1 = new Skill("S001");
-        Skill s2 = new Skill("S002");
         Feature f1 = new Feature("F001", PriorityLevel.HIGH, 10.0, null, s1);
-        HashMap<String, Double> e1Map = new HashMap<>();
-        e1Map.put("S001", 0.5);
-        e1Map.put("S002", 0.5);
-        Employee e1 = new Employee("E001", e1Map, random.getAgenda(4,8.0));
+        Skill es1 = new Skill("S001", 1.0);
+        Skill es2 = new Skill("S001", 0.5);
+        Employee e1 = new Employee("E001", Arrays.asList(es1), random.getAgenda(4,8.0));
         HashMap<String, Double> e2Map = new HashMap<>();
         e2Map.put("S002", 0.5);
         e2Map.put("S001", 0.5);
-        Employee e2 = new Employee("E002", e2Map, random.getAgenda(4,8.0));
+        Employee e2 = new Employee("E002", Arrays.asList(es2), random.getAgenda(4,8.0));
 
         for (int i = 0; i < 100; ++i) {
             NextReleaseProblem nextReleaseProblem =

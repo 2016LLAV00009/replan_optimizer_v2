@@ -13,7 +13,13 @@ public class Skill {
 	/* --- Atributes --- */
 
 	private String name;
-	
+	private Double weight;
+
+	public Skill(String name, double weight) {
+		this.name = name;
+		this.weight = weight;
+	}
+
 	/* --- Getters and setters --- */
 
 	@ApiModelProperty(value = "")
@@ -23,6 +29,14 @@ public class Skill {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public Double getWeight() {
+		return weight;
+	}
+
+	public void setWeight(Double weight) {
+		this.weight = weight;
 	}
 
 	public Skill name(String name) {
