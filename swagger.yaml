@@ -1,7 +1,7 @@
 swagger: '2.0'
 info:
   title: SUPERSEDE ReleasePlanner. Wrapper of Valentin's Implementation
-  version: 1.2.0
+  version: 2.0.0
 host: localhost
 schemes:
   - http
@@ -96,30 +96,131 @@ definitions:
       populationSize:
         type: integer
   NextReleaseProblem:
-    type: object
-    required:
-      - nbWeeks
-      - hoursPerWeek
-      - features
-      - resources
-    properties:
-      nbWeeks:
-        type: integer
-      hoursPerWeek:
-        type: number
-        format: double
-      features:
-        type: array
-        items:
-          $ref: '#/definitions/Feature'
-      resources:
-        type: array
-        items:
-          $ref: '#/definitions/Resource'
-      currentPlan:
-        $ref: '#/definitions/PlanningSolution'
-      algorithmParameters:
-        $ref: '#/definitions/AlgorithmParameters'
+    required: 
+      - "features"
+      - "resources"
+      - "algorithmParameters"
+      - "evaluationParameters"
+    properties: 
+      features: 
+        type: "array"
+        items: 
+          type: "object"
+          properties: 
+            name: 
+              type: "string"
+            priority: 
+              required: 
+                - "level"
+                - "score"
+              properties: 
+                level: 
+                  type: "number"
+                score: 
+                  type: "number"
+              type: "object"
+            duration: 
+              type: "number"
+            required_skills: 
+              type: "array"
+              items: 
+                type: "object"
+                properties: 
+                  name: 
+                    type: "string"
+            depends_on: 
+              type: "array"
+              items: 
+                type: "string"
+      resources: 
+        type: "array"
+        items: 
+          type: "object"
+          properties: 
+            name: 
+              type: "string"
+            skills: 
+              type: "array"
+              items: 
+                type: "object"
+                properties: 
+                  name: 
+                    type: "string"
+            calendar: 
+              type: "array"
+              items: 
+                type: "object"
+                properties: 
+                  id: 
+                    type: "number"
+                  week: 
+                    type: "number"
+                  dayOfWeek: 
+                    type: "number"
+                  beginHour: 
+                    type: "number"
+                  endHour: 
+                    type: "number"
+                  status: 
+                    type: "string"
+      algorithmParameters: 
+        required: 
+          - "algorithmType"
+          - "crossoverProbability"
+          - "rateOfNotRandomSolution"
+          - "numberOfIterations"
+          - "populationSize"
+        properties: 
+          algorithmType: 
+            type: "string"
+          crossoverProbability: 
+            type: "number"
+          rateOfNotRandomSolution: 
+            type: "number"
+          numberOfIterations: 
+            type: "number"
+          populationSize: 
+            type: "number"
+        type: "object"
+      evaluationParameters: 
+        required: 
+          - "objectives_list"
+        properties: 
+          objectives_list: 
+            type: "array"
+            items: 
+              type: "object"
+              properties: 
+                0: 
+                  type: "number"
+                1: 
+                  type: "number"
+                2: 
+                  type: "number"
+                3: 
+                  type: "number"
+                4: 
+                  type: "number"
+        type: "object"
+      replanTime: 
+        required: 
+          - "id"
+          - "week"
+          - "dayOfWeek"
+          - "beginHour"
+          - "endHour"
+        properties: 
+          id: 
+            type: "number"
+          week: 
+            type: "number"
+          dayOfWeek: 
+            type: "number"
+          beginHour: 
+            type: "number"
+          endHour: 
+            type: "number"
+        type: "object"
   PlannedFeature:
     type: object
     properties:
@@ -138,12 +239,55 @@ definitions:
       feature:
         $ref: '#/definitions/Feature'
   PlanningSolution:
-    type: object
-    properties:
-      jobs:
-        type: array
-        items:
-          $ref: '#/definitions/PlannedFeature'
+    required: 
+      - "priorityQuality"
+      - "performanceQuality"
+      - "similarityQuality"
+      - "globalQuality"
+      - "employees"
+    properties: 
+      priorityQuality: 
+        type: "number"
+      performanceQuality: 
+        type: "number"
+      similarityQuality: 
+        type: "number"
+      globalQuality: 
+        type: "number"
+      employees: 
+        type: "array"
+        items: 
+          type: "object"
+          properties: 
+            name: 
+              type: "string"
+            skills: 
+              type: "array"
+              items: 
+                type: "object"
+                properties: 
+                  name: 
+                    type: "string"
+            calendar: 
+              type: "array"
+              items: 
+                type: "object"
+                properties: 
+                  id: 
+                    type: "number"
+                  week: 
+                    type: "number"
+                  dayOfWeek: 
+                    type: "number"
+                  beginHour: 
+                    type: "number"
+                  endHour: 
+                    type: "number"
+                  status: 
+                    type: "string"
+                  featureId: 
+                    type: "string"
+
   Error:
     type: object
     properties:
@@ -154,3 +298,4 @@ definitions:
         type: string
       fields:
         type: string
+
