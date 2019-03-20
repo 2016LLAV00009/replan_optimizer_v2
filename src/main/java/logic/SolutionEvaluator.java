@@ -140,8 +140,8 @@ public class SolutionEvaluator {
 
                 List<Skill> requiredSkills = f.getRequiredSkills();
                 for (Skill s : requiredSkills) {
-                    Double weight = e.getSkills().stream().filter(es -> es.getName().equals(s.getName())).collect(Collectors.toList()).get(0).getWeight();
-                    if (weight != null) featureAdequateness += weight;
+                    List<Skill> found = e.getSkills().stream().filter(es -> es.getName().equals(s.getName())).collect(Collectors.toList());
+                    if (!found.isEmpty()) featureAdequateness += found.get(0).getWeight();
                     else featureAdequateness += 0.;
                 }
 

@@ -75,7 +75,7 @@ public class NextReleaseProblem extends AbstractGenericProblem<PlanningSolution>
 	public List<Employee> getSkilledEmployees(List<Skill> reqSkills) {
 		ArrayList<Employee> skilledEmployees = new ArrayList<>();
 		for (Employee employee : employees)
-			if(employee.getSkills().containsAll(reqSkills))
+			//if(employee.getSkills().containsAll(reqSkills))
 				skilledEmployees.add(employee);
 		return skilledEmployees;
 	}
