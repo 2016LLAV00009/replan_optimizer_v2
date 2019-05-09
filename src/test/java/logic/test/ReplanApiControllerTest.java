@@ -34,9 +34,9 @@ public class ReplanApiControllerTest {
 
     @Test
     public void randomProblem() {
-        List<Skill> skills = random.skillList(5);
-        List<Feature> features = random.featureList(20);
-        List<Employee> resources = random.employeeList(5);
+        List<Skill> skills = random.skillList(2);
+        List<Feature> features = random.featureList(5);
+        List<Employee> resources = random.employeeList(2);
 
         random.mix(features, skills, resources);
 
